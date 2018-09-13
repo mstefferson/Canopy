@@ -1,0 +1,13 @@
+# Data
+./data
+
+# cached/accessory
+.ipynb_checkpoints/
+src/*.pyc
+src/__pycache__
+__pycache__
+
+# temp files
+*swp
+*swo
+
