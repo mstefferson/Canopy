@@ -5,6 +5,7 @@ from gdalconst import *
 import matplotlib.pyplot as plt
 import numpy as np
 import argparse
+from pytictoc import TicToc
 from scipy.ndimage.filters import maximum_filter
 from scipy.ndimage.morphology import generate_binary_structure, binary_erosion
 # import streamlit as st
@@ -92,14 +93,15 @@ def plot_plants(band_data, plant_data, tree_loc):
 
 def main(sat_file, plot_flag):
     cwd = os.getcwd()
-    st.write('In directory:' + cwd)
-    sat_file = 'data/raw/athens_satellite.tif'
+    # st.write('In directory:' + cwd)
     ds_all = gdal.Open(sat_file, GA_ReadOnly)
     # get raster bands for a subset
     x_start = ds_all.RasterXSize // 2 + 100
     y_start = ds_all.RasterYSize // 2 - 100
     x_del = 1000
     y_del = 1000
+    x_end = x_start + x_del
+    y_end = y_start + y_del
     band_data = get_satellite_subset(ds_all, x_start, y_start, x_del, y_del)
     # get tree data
     plant_data = get_tree_finder_image(band_data)
@@ -108,6 +110,23 @@ def main(sat_file, plot_flag):
     # plot it
     if plot_flag:
         plot_plants(band_data, plant_data, tree_loc)
+    # store output
+    plant_dict = {}
+    leading_zeros = int(np.ceil(np.log10(ds_all.RasterXSize)))
+    id_base = 'sat_'
+    int_str_format = '{:0' + str(leading_zeros) + '}'
+    print(int_str_format)
+    store_id = (id_base +
+                int_str_format.format(x_start) + '_' +
+                int_str_format.format(x_end) + '_' +
+                int_str_format.format(y_start) + '_' +
+                int_str_format.format(y_end) + '_'
+                )
+    plant_dict[store_id] = {'x_start': x_start, 'x_end': x_end,
+                            'y_start': y_start, 'y_end': y_end}
+    peaks_zip = [(x, y) for (x, y) in zip(tree_loc[0], tree_loc[1])]
+    plant_dict[store_id]['trees'] = peaks_zip
+    print(plant_dict)
 
 
 if __name__ == '__main__':
@@ -115,9 +134,14 @@ if __name__ == '__main__':
     Example call:
         python src/satellite_analyze data/raw/athens_satellite.tif --plot=0
     '''
+    # start timer
+    t = TicToc()
+    t.tic()
     # parse inputs
     parser = argparse.ArgumentParser()
     parser.add_argument('sat_file', type=str, help='path to satellite tif')
     parser.add_argument('--plot', type=bool, default=False, help='plot flag')
     args = parser.parse_args()
+    # run main
     main(args.sat_file, args.plot)
+    t.toc()
