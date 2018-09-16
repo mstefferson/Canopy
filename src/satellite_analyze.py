@@ -4,9 +4,10 @@ import glob
 from gdalconst import *
 import matplotlib.pyplot as plt
 import numpy as np
-import streamlit as st
+import argparse
 from scipy.ndimage.filters import maximum_filter
 from scipy.ndimage.morphology import generate_binary_structure, binary_erosion
+# import streamlit as st
 
 
 def detect_peaks(image):
@@ -89,15 +90,11 @@ def plot_plants(band_data, plant_data, tree_loc):
     st.pyplot()
 
 
-def find_tree_peaks(plant_data):
-    print('Not written')
-
-
-def main():
+def main(sat_file, plot_flag):
     cwd = os.getcwd()
     st.write('In directory:' + cwd)
-    filename = 'data/raw/athens_satellite.tif'
-    ds_all = gdal.Open(filename, GA_ReadOnly)
+    sat_file = 'data/raw/athens_satellite.tif'
+    ds_all = gdal.Open(sat_file, GA_ReadOnly)
     # get raster bands for a subset
     x_start = ds_all.RasterXSize // 2 + 100
     y_start = ds_all.RasterYSize // 2 - 100
@@ -109,8 +106,18 @@ def main():
     # get peaks
     tree_loc = detect_peaks(plant_data)
     # plot it
-    plot_plants(band_data, plant_data, tree_loc)
+    if plot_flag:
+        plot_plants(band_data, plant_data, tree_loc)
 
 
 if __name__ == '__main__':
-    main()
+    '''
+    Example call:
+        python src/satellite_analyze data/raw/athens_satellite.tif --plot=0
+    '''
+    # parse inputs
+    parser = argparse.ArgumentParser()
+    parser.add_argument('sat_file', type=str, help='path to satellite tif')
+    parser.add_argument('--plot', type=bool, default=False, help='plot flag')
+    args = parser.parse_args()
+    main(args.sat_file, args.plot)
