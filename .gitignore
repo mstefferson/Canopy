@@ -7,6 +7,8 @@ data/
 src/*.pyc
 src/__pycache__
 __pycache__
+.streamlit
+src/.streamlit
 
 # temp files
 *swp
