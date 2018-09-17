@@ -10,6 +10,9 @@ __pycache__
 .streamlit
 src/.streamlit
 
+# unwated files
+*pkl
+
 # temp files
 *swp
 *swo

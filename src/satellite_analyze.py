@@ -8,6 +8,7 @@ import argparse
 from pytictoc import TicToc
 from scipy.ndimage.filters import maximum_filter
 from scipy.ndimage.morphology import generate_binary_structure, binary_erosion
+import pickle
 # import streamlit as st
 
 
@@ -91,17 +92,8 @@ def plot_plants(band_data, plant_data, tree_loc):
     st.pyplot()
 
 
-def main(sat_file, plot_flag):
-    cwd = os.getcwd()
-    # st.write('In directory:' + cwd)
-    ds_all = gdal.Open(sat_file, GA_ReadOnly)
-    # get raster bands for a subset
-    x_start = ds_all.RasterXSize // 2 + 100
-    y_start = ds_all.RasterYSize // 2 - 100
-    x_del = 1000
-    y_del = 1000
-    x_end = x_start + x_del
-    y_end = y_start + y_del
+def find_peaks_for_subset(ds_all, x_start, y_start, x_del, y_del, plot_flag):
+    # get the band data
     band_data = get_satellite_subset(ds_all, x_start, y_start, x_del, y_del)
     # get tree data
     plant_data = get_tree_finder_image(band_data)
@@ -113,20 +105,53 @@ def main(sat_file, plot_flag):
     # store output
     plant_dict = {}
     leading_zeros = int(np.ceil(np.log10(ds_all.RasterXSize)))
+    # build up string
     id_base = 'sat_'
     int_str_format = '{:0' + str(leading_zeros) + '}'
-    print(int_str_format)
+    # store the end of the range
+    x_end = x_start + x_del
+    y_end = y_start + y_del
     store_id = (id_base +
                 int_str_format.format(x_start) + '_' +
                 int_str_format.format(x_end) + '_' +
                 int_str_format.format(y_start) + '_' +
                 int_str_format.format(y_end) + '_'
                 )
-    plant_dict[store_id] = {'x_start': x_start, 'x_end': x_end,
-                            'y_start': y_start, 'y_end': y_end}
-    peaks_zip = [(x, y) for (x, y) in zip(tree_loc[0], tree_loc[1])]
-    plant_dict[store_id]['trees'] = peaks_zip
-    print(plant_dict)
+    # put peaks in a nice format
+    peaks_zip_local = [(x, y) for (x, y) in zip(tree_loc[0], tree_loc[1])]
+    tree_x_glob = tree_loc[0] + x_start
+    tree_y_glob = tree_loc[1] + y_start
+    peaks_zip_global = [(x, y) for (x, y) in zip(tree_x_glob, tree_y_glob)]
+    # store it
+    plant_dict = {'store_id': store_id, 'x_start': x_start, 'x_end': x_end,
+                  'y_start': y_start, 'y_end': y_end,
+                  'trees_local': peaks_zip_local,
+                  'trees_global': peaks_zip_global}
+    return plant_dict
+
+
+def main(sat_file, plot_flag):
+    cwd = os.getcwd()
+    # st.write('In directory:' + cwd)
+    ds_all = gdal.Open(sat_file, GA_ReadOnly)
+    # get raster bands for a subset
+    x_start = ds_all.RasterXSize // 2
+    y_start = ds_all.RasterYSize // 2
+    x_del = 1000
+    y_del = 1000
+    x_end = x_start + 2 * x_del
+    y_end = y_start + 2 * y_del
+    counter = 0
+    tree_coords = []
+    # loop over subsets
+    for xs in np.arange(x_start, x_end, x_del):
+        for ys in np.arange(y_start, y_end, y_del):
+            tree_dict = find_peaks_for_subset(ds_all, xs, ys,
+                                              x_del, y_del, plot_flag)
+            # store just the global tree coordinates
+            tree_coords += tree_dict['trees_global']
+    # dump it
+    pickle.dump(tree_coords, open('tree_coords.pkl', 'wb'))
 
 
 if __name__ == '__main__':
