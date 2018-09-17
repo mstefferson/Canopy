@@ -12,6 +12,7 @@ src/.streamlit
 
 # unwated files
 *pkl
+notebooks/Scratch.ipynb
 
 # temp files
 *swp
