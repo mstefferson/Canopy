@@ -11,7 +11,9 @@ __pycache__
 src/.streamlit
 
 # unwated files
+notes.txt
 *pkl
+*log
 notebooks/Scratch.ipynb
 
 # temp files
