@@ -1,11 +1,20 @@
 # Data
-./data
+#data/*/
+data/
 
 # cached/accessory
 .ipynb_checkpoints/
 src/*.pyc
 src/__pycache__
 __pycache__
+.streamlit
+src/.streamlit
+
+# unwated files
+notes.txt
+*pkl
+*log
+notebooks/Scratch.ipynb
 
 # temp files
 *swp
