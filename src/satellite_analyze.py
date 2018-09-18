@@ -1,3 +1,4 @@
+import logging
 import gdal
 import os
 import glob
@@ -234,8 +235,29 @@ def main(sat_file, plot_flag):
     Write to file:
         'tree_coords.pkl': pickle file of a list of tree coordinates in pixels
     '''
-    cwd = os.getcwd()
-    # st.write('In directory:' + cwd)
+    # set-up logger
+    logger = logging.getLogger('sat')
+    logger.setLevel(logging.DEBUG)
+    # create file handler which logs even debug messages
+    fh = logging.FileHandler('sat.log')
+    fh.setLevel(logging.INFO)
+    # create console handler with a higher log level
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.ERROR)
+    # create formatter and add it to the handlers
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    ch.setFormatter(formatter)
+    fh.setFormatter(formatter)
+    # add the handlers to logger
+    logger.addHandler(ch)
+    logger.addHandler(fh)
+    # start timer
+    t = TicToc()
+    t.tic()
+    # log it
+    logger.info('Reading in file: ' + args.sat_file)
+    # get tif data
     ds_all = gdal.Open(sat_file, GA_ReadOnly)
     # get raster bands for a subset
     x_start = ds_all.RasterXSize // 2
@@ -260,6 +282,9 @@ def main(sat_file, plot_flag):
             counter += 1
     # dump it
     pickle.dump(tree_coords, open('tree_coords.pkl', 'wb'))
+    # store time
+    run_time = t.tocvalue()
+    logger.info('Run time ' + str(run_time) + ' sec')
 
 
 if __name__ == '__main__':
@@ -269,9 +294,6 @@ if __name__ == '__main__':
     Example call:
         python src/satellite_analyze data/raw/athens_satellite.tif --plot=true
     '''
-    # start timer
-    t = TicToc()
-    t.tic()
     # parse inputs
     parser = argparse.ArgumentParser()
     parser.add_argument('sat_file', type=str, help='path to satellite tif')
@@ -279,4 +301,3 @@ if __name__ == '__main__':
     args = parser.parse_args()
     # run main
     main(args.sat_file, args.plot)
-    t.toc()
