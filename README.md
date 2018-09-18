@@ -30,6 +30,9 @@ git push origin $branch_name
 ## Requisites
 - List all packages and software needed to build the environment
 - This could include cloud command line tools (i.e. gsutil), package managers (i.e. conda), etc.
+
+### Get docker image
+docker pull mstefferson/tree_bot:latest
 ```
 # Example
 - A
