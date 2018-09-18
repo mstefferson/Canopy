@@ -9,7 +9,7 @@ from pytictoc import TicToc
 from scipy.ndimage.filters import maximum_filter
 from scipy.ndimage.morphology import generate_binary_structure, binary_erosion
 import pickle
-# import streamlit as st
+import streamlit as st
 
 
 def detect_peaks(array_with_peaks):
@@ -137,6 +137,7 @@ def plot_satellite_image(band_data, plant_data, tree_loc):
     Write to file:
         N/A
     '''
+    st.title('Sample satellite images')
     fig, axs = plt.subplots(2, 3, figsize=(9, 6))
     axs = np.reshape(axs, [6, ])
     color_scheme = ['red', 'green', 'blue',  'IR']
@@ -256,7 +257,6 @@ def main(sat_file, plot_flag):
             else:
                 tree_coords = np.append(tree_coords, tree_dict['trees_global'],
                                         axis=0)
-            print(np.shape(tree_coords))
             counter += 1
     # dump it
     pickle.dump(tree_coords, open('tree_coords.pkl', 'wb'))
