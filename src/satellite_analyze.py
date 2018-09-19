@@ -23,13 +23,16 @@ def get_latlon_known_trees(filename):
     return lon, lat
 
 
-def proj_xy_2_latlon(orig_crs, x1, y1):
+def proj_rc_2_latlon(r, c, dataset):
+    # convert rows and columns to xy map project
+    (x, y) = rasterio.transform.xy(dataset.transform, r, c)
     # input project based on crs of tif/shp
-    in_proj = pyproj.Proj(orig_crs)
+    in_proj = pyproj.Proj(dataset.crs)
     # output project to lat/lon
     out_proj = pyproj.Proj(init='epsg:4326')
-    x2, y2 = pyproj.transform(in_proj, out_proj, x1, y1)
-    return (x2, y2)
+    # project xy to lat/lon
+    lon, lat = pyproj.transform(in_proj, out_proj, x, y)
+    return (lon, lat)
 
 
 def detect_peaks(array_with_peaks):
@@ -168,13 +171,14 @@ def find_peaks_for_subset(ds_all, x_start, y_start, x_del, y_del, plot_flag):
     # get tree data
     plant_data = get_tree_finder_image(band_data)
     # get peaks
-    tree_loc = detect_peaks(plant_data)
+    trees_local = detect_peaks(plant_data)
     # plot it
     if plot_flag:
         plot_satellite_image(band_data, plant_data, tree_loc)
     # store output
     plant_dict = {}
-    leading_zeros = int(np.ceil(np.log10(ds_all.RasterXSize)))
+    leading_zeros = int(np.ceil(np.log10(np.max([ds_all.width,
+                                                 ds_all.height]))))
     # build up string
     id_base = 'sat_'
     int_str_format = '{:0' + str(leading_zeros) + '}'
@@ -188,17 +192,20 @@ def find_peaks_for_subset(ds_all, x_start, y_start, x_del, y_del, plot_flag):
                 int_str_format.format(y_end) + '_'
                 )
     # put peaks in a nice format
-    trees_global = np.zeros(np.shape(peaks_zip_local))
-    trees_global[:, 0] = peaks_local[:, 0] + x_start
-    trees_global[:, 1] = peaks_local[:, 1] + y_start
+    trees_global = np.zeros(np.shape(trees_local))
+    trees_global[:, 0] = trees_local[:, 0] + x_start
+    trees_global[:, 1] = trees_local[:, 1] + y_start
     # grab lat/lon
-    (lon, lat) = proj_xy_2_latlon(trees_global[:, 0], trees_global[:, 1],
-                                  ds_all.crs)
+    trees_lonlat = np.zeros(np.shape(trees_local))
+    (trees_lonlat[:, 0], trees_lonlat[:, 1]) = (
+        proj_rc_2_latlon(trees_global[:, 0], trees_global[:, 1],
+                         ds_all))
     # store it
     plant_dict = {'store_id': store_id, 'x_start': x_start, 'x_end': x_end,
                   'y_start': y_start, 'y_end': y_end,
-                  'trees_local': peaks_local,
-                  'trees_global': peaks_global}
+                  'trees_local': trees_local,
+                  'trees_global': trees_global,
+                  'trees_lonlat': trees_lonlat}
     return plant_dict
 
 
@@ -222,7 +229,7 @@ def main(sat_file, plot_flag):
     logger = logging.getLogger('sat')
     logger.setLevel(logging.DEBUG)
     # create file handler which logs even debug messages
-    fh = logging.FileHandler('sat.log')
+    fh = logging.FileHandler('sat.log', mode='w')
     fh.setLevel(logging.INFO)
     # create console handler with a higher log level
     ch = logging.StreamHandler()
@@ -251,7 +258,7 @@ def main(sat_file, plot_flag):
     y_end = y_start + 2 * y_del
     counter = 0
     tree_coords_all = []
-    tree_latlon_all = []
+    tree_lonlat_all = []
     # loop over subsets
     for xs in np.arange(x_start, x_end, x_del):
         for ys in np.arange(y_start, y_end, y_del):
@@ -260,17 +267,18 @@ def main(sat_file, plot_flag):
             # store just the global tree coordinates
             if counter == 0:
                 tree_coords_all = tree_dict['trees_global']
-                tree_latlon_all = tree_dict['tree_loc_latlong']
+                tree_lonlat_all = tree_dict['trees_lonlat']
             else:
                 tree_coords_all = np.append(tree_coords_all,
                                             tree_dict['trees_global'],
                                             axis=0)
-                tree_latlon_all = np.append(tree_latlon_all,
-                                            tree_dict['trees_latlon'],
+                tree_lonlat_all = np.append(tree_lonlat_all,
+                                            tree_dict['trees_lonlat'],
                                             axis=0)
             counter += 1
     # dump it
-    pickle.dump(tree_coords, open('tree_coords.pkl', 'wb'))
+    pickle.dump((tree_coords_all, tree_lonlat_all),
+                open('tree_coords.pkl', 'wb'))
     # store time
     run_time = t.tocvalue()
     logger.info('Run time ' + str(run_time) + ' sec')
