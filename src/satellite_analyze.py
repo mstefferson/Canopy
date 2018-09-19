@@ -1,16 +1,35 @@
 import logging
-import gdal
 import os
 import glob
-from gdalconst import *
-import matplotlib.pyplot as plt
 import numpy as np
 import argparse
 from pytictoc import TicToc
 from scipy.ndimage.filters import maximum_filter
 from scipy.ndimage.morphology import generate_binary_structure, binary_erosion
 import pickle
-import streamlit as st
+import geopandas
+import pyproj
+import rasterio
+
+
+def get_latlon_known_trees(filename):
+    # Read data using geopandas
+    data = geopandas.read_file(filename)
+    # map data to lat/long using projection type epsg:4326
+    data = data.to_crs({"init": "epsg:4326"})
+    # get lat from lon from bounds of point object
+    lon = data['geometry'].apply(lambda x: x.bounds[0])
+    lat = data['geometry'].apply(lambda x: x.bounds[1])
+    return lon, lat
+
+
+def proj_xy_2_latlon(orig_crs, x1, y1):
+    # input project based on crs of tif/shp
+    in_proj = pyproj.Proj(orig_crs)
+    # output project to lat/lon
+    out_proj = pyproj.Proj(init='epsg:4326')
+    x2, y2 = pyproj.transform(in_proj, out_proj, x1, y1)
+    return (x2, y2)
 
 
 def detect_peaks(array_with_peaks):
@@ -74,13 +93,17 @@ def get_satellite_subset(ds_all, r_start, c_start, r_del, c_del):
     Write to file:
         N/A
     '''
-    channels = 3
-    band_data = np.zeros((r_del, c_del, 4))
+    # set 4 channels (r,g,b,IR)
+    channels = 4
+    band_data = np.zeros((r_del, c_del, channels))
     data_sum = np.zeros((r_del, c_del))
-    for index in np.arange(4):
+    # get end point
+    r_end = r_start + r_del
+    c_end = c_start + c_del
+    for index in np.arange(channels):
         band_num = index + 1
-        band = ds_all.GetRasterBand(band_num)
-        data = band.ReadAsArray(r_start, c_start, r_del, c_del)
+        data = ds_all.read(band_num,
+                           window=((r_start, r_end), (c_start, c_end)))
         # grab data
         band_data[:, :, index] = data
     # scale data
@@ -119,48 +142,6 @@ def get_tree_finder_image(band_data, drop_thres=0.05):
     return plant_data
 
 
-def plot_satellite_image(band_data, plant_data, tree_loc):
-    '''
-    Description:
-        Plots the raster bands, the plant data, and tree locations
-    Inputs:
-        band_data (np.array, size=[r_del, c_del, 4]): The rastered image
-            data for all bands
-        plant_data (np.array, size=[r_del, c_del]): The rastered image
-            data for all bands
-    Returns:
-        plant_data (np.array, size=[r_del, c_del]): A map that is strongly
-            peaks where there are trees
-        plant_data (np.array, size=[r_del, c_del]): A map that is strongly
-            peaks where there are trees
-    Updates:
-        N/A
-    Write to file:
-        N/A
-    '''
-    st.title('Sample satellite images')
-    fig, axs = plt.subplots(2, 3, figsize=(9, 6))
-    axs = np.reshape(axs, [6, ])
-    color_scheme = ['red', 'green', 'blue',  'IR']
-    for index in np.arange(4):
-        # plot it
-        plt.subplot(2, 3, index+1)
-        plt.title(color_scheme[index])
-        imgplot = plt.imshow(band_data[:, :, index])
-    # plot it
-    plt.subplot(2, 3, 5)
-    plt.title('All colors')
-    imgplot = plt.imshow(band_data[:, :, :3])
-    # plot it
-    plt.subplot(2, 3, 6)
-    imgplot = plt.imshow(plant_data)
-    # plot trees (x and y are switched)
-    plt.scatter(tree_loc[1], tree_loc[0], color='r')
-    plt.title('Plant detect')
-    # plt.show()
-    st.pyplot()
-
-
 def find_peaks_for_subset(ds_all, x_start, y_start, x_del, y_del, plot_flag):
     '''
     Description:
@@ -178,10 +159,10 @@ def find_peaks_for_subset(ds_all, x_start, y_start, x_del, y_del, plot_flag):
     Returns:
         plant_dict (dict): summary of tree locations and row/col indices
     Updates:
-        N/A
+         N/A
     Write to file:
-        N/A
-    '''
+         N/A
+     '''
     # get the band data
     band_data = get_satellite_subset(ds_all, x_start, y_start, x_del, y_del)
     # get tree data
@@ -207,15 +188,17 @@ def find_peaks_for_subset(ds_all, x_start, y_start, x_del, y_del, plot_flag):
                 int_str_format.format(y_end) + '_'
                 )
     # put peaks in a nice format
-    peaks_zip_local = tree_loc
-    peaks_zip_global = np.zeros(np.shape(peaks_zip_local))
-    peaks_zip_global[:, 0] = peaks_zip_local[:, 0] + x_start
-    peaks_zip_global[:, 1] = peaks_zip_local[:, 1] + y_start
+    trees_global = np.zeros(np.shape(peaks_zip_local))
+    trees_global[:, 0] = peaks_local[:, 0] + x_start
+    trees_global[:, 1] = peaks_local[:, 1] + y_start
+    # grab lat/lon
+    (lon, lat) = proj_xy_2_latlon(trees_global[:, 0], trees_global[:, 1],
+                                  ds_all.crs)
     # store it
     plant_dict = {'store_id': store_id, 'x_start': x_start, 'x_end': x_end,
                   'y_start': y_start, 'y_end': y_end,
-                  'trees_local': peaks_zip_local,
-                  'trees_global': peaks_zip_global}
+                  'trees_local': peaks_local,
+                  'trees_global': peaks_global}
     return plant_dict
 
 
@@ -258,16 +241,17 @@ def main(sat_file, plot_flag):
     # log it
     logger.info('Reading in file: ' + args.sat_file)
     # get tif data
-    ds_all = gdal.Open(sat_file, GA_ReadOnly)
+    ds_all = rasterio.open(sat_file)
     # get raster bands for a subset
-    x_start = ds_all.RasterXSize // 2
-    y_start = ds_all.RasterYSize // 2
+    x_start = ds_all.height // 2
+    y_start = ds_all.width // 2
     x_del = 1000
     y_del = 1000
     x_end = x_start + 2 * x_del
     y_end = y_start + 2 * y_del
     counter = 0
-    tree_coords = []
+    tree_coords_all = []
+    tree_latlon_all = []
     # loop over subsets
     for xs in np.arange(x_start, x_end, x_del):
         for ys in np.arange(y_start, y_end, y_del):
@@ -275,10 +259,15 @@ def main(sat_file, plot_flag):
                                               x_del, y_del, plot_flag)
             # store just the global tree coordinates
             if counter == 0:
-                tree_coords = tree_dict['trees_global']
+                tree_coords_all = tree_dict['trees_global']
+                tree_latlon_all = tree_dict['tree_loc_latlong']
             else:
-                tree_coords = np.append(tree_coords, tree_dict['trees_global'],
-                                        axis=0)
+                tree_coords_all = np.append(tree_coords_all,
+                                            tree_dict['trees_global'],
+                                            axis=0)
+                tree_latlon_all = np.append(tree_latlon_all,
+                                            tree_dict['trees_latlon'],
+                                            axis=0)
             counter += 1
     # dump it
     pickle.dump(tree_coords, open('tree_coords.pkl', 'wb'))
