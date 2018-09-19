@@ -1,0 +1,2 @@
+#!/bin/bash
+docker run -ti -v ${PWD}:/app/ mstefferson/tree_bot:latest
