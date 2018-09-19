@@ -1,6 +1,7 @@
 # Data
 #data/*/
 data/
+config.yaml
 
 # cached/accessory
 .ipynb_checkpoints/
