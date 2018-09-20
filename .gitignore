@@ -15,6 +15,7 @@ src/.streamlit
 notes.txt
 *pkl
 *log
+*jpg
 notebooks/Scratch.ipynb
 
 # temp files

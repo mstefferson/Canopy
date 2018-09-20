@@ -12,7 +12,7 @@ import pyproj
 import rasterio
 
 
-def get_latlon_known_trees(filename):
+def get_latlon_tree_file(filename):
     # Read data using geopandas
     data = geopandas.read_file(filename)
     # map data to lat/long using projection type epsg:4326
@@ -20,17 +20,61 @@ def get_latlon_known_trees(filename):
     # get lat from lon from bounds of point object
     lon = data['geometry'].apply(lambda x: x.bounds[0])
     lat = data['geometry'].apply(lambda x: x.bounds[1])
-    return lon, lat
+    # store it in numpy array
+    lon_lat = np.zeros((len(lon), 2))
+    lon_lat[:, 0] = lon
+    lon_lat[:, 1] = lat
+    return lon_lat
+
+
+def get_xy_tree_file(filename):
+    # Read data using geopandas
+    data = geopandas.read_file(filename)
+    # get lat from lon from bounds of point object
+    x = data['geometry'].apply(lambda x: x.bounds[0])
+    y = data['geometry'].apply(lambda x: x.bounds[1])
+    # store it in numpy array
+    xy = np.zeros((len(x), 2))
+    xy[:, 0] = x
+    xy[:, 1] = y
+    return xy
+
+
+def get_known_tree_all(transfunc=get_latlon_tree_file):
+    # root = '/app/'
+    root = '/Users/mike/Insight/Tree_Bot/'
+    file1 = root + 'data/raw/known_trees/prasino_istorikou_kentou/dendra.shp'
+    file2 = root + 'data/raw/known_trees/prasino_istorikou_kentou/glastra.shp'
+    file3 = root + 'data/raw/known_trees/prasino_istorikou_kentou/pagkakia.shp'
+    # get all the data
+    data1 = transfunc(file1)
+    data2 = transfunc(file2)
+    data3 = transfunc(file3)
+    # collect all data together
+    data_all = np.append(data1, np.append(data2, data3, axis=0), axis=0)
+    return data_all
+
+
+def proj_latlon_2_rc(lon, lat, dataset):
+    # input lat/lon
+    in_proj = pyproj.Proj(init='epsg:4326')
+    # output based on crs of tif/shp
+    out_proj = pyproj.Proj(dataset.crs)
+    # transform lat/lon to xy
+    x, y = pyproj.transform(in_proj, out_proj, lon, lat)
+    # convert rows and columns to xy map project
+    (r, c) = rasterio.transform.rowcol(dataset.transform, x, y)
+    return (int(r), int(c))
 
 
 def proj_rc_2_latlon(r, c, dataset):
     # convert rows and columns to xy map project
     (x, y) = rasterio.transform.xy(dataset.transform, r, c)
-    # input project based on crs of tif/shp
+    # input based on crs of tif/shp
     in_proj = pyproj.Proj(dataset.crs)
-    # output project to lat/lon
+    # output lat/lon
     out_proj = pyproj.Proj(init='epsg:4326')
-    # project xy to lat/lon
+    # transform xy to lat/lon
     lon, lat = pyproj.transform(in_proj, out_proj, x, y)
     return (lon, lat)
 
@@ -76,7 +120,7 @@ def detect_peaks(array_with_peaks):
     return peaks
 
 
-def get_satellite_subset(ds_all, r_start, c_start, r_del, c_del):
+def get_satellite_subset(ds_all, r_start, r_end, c_start, c_end):
     '''
     Description:
         Returns a numpy data array of the rasted satellite
@@ -86,8 +130,8 @@ def get_satellite_subset(ds_all, r_start, c_start, r_del, c_del):
             ds_all = gldal.Open('...')
         r_start (int): Initial row pixel number of subset
         c_start (int): Initial column pixel number of subset
-        r_del (int): Width of subset in pixels along rows
-        c_del (int): Width of subset in pixels along columns
+        r_end (int): Initial row pixel number of subset
+        c_end (int): Final row pixel number of subset
     Returns:
         band_data (np.array, size=[r_del, c_del, 4]): The rastered image
             data for all bands
@@ -98,6 +142,10 @@ def get_satellite_subset(ds_all, r_start, c_start, r_del, c_del):
     '''
     # set 4 channels (r,g,b,IR)
     channels = 4
+    # calculate width
+    r_del = r_end - r_start
+    c_del = c_end - c_start
+    # initialize
     band_data = np.zeros((r_del, c_del, channels))
     data_sum = np.zeros((r_del, c_del))
     # get end point
@@ -145,7 +193,7 @@ def get_tree_finder_image(band_data, drop_thres=0.05):
     return plant_data
 
 
-def find_peaks_for_subset(ds_all, x_start, y_start, x_del, y_del, plot_flag):
+def find_peaks_for_subset(ds_all, r_start, r_end, c_start, c_end, plot_flag):
     '''
     Description:
         Grabs a data subset and finds all the trees. This is a wrapper
@@ -167,7 +215,7 @@ def find_peaks_for_subset(ds_all, x_start, y_start, x_del, y_del, plot_flag):
          N/A
      '''
     # get the band data
-    band_data = get_satellite_subset(ds_all, x_start, y_start, x_del, y_del)
+    band_data = get_satellite_subset(ds_all, r_start, r_end, c_start, c_end)
     # get tree data
     plant_data = get_tree_finder_image(band_data)
     # get peaks
@@ -183,26 +231,24 @@ def find_peaks_for_subset(ds_all, x_start, y_start, x_del, y_del, plot_flag):
     id_base = 'sat_'
     int_str_format = '{:0' + str(leading_zeros) + '}'
     # store the end of the range
-    x_end = x_start + x_del
-    y_end = y_start + y_del
     store_id = (id_base +
-                int_str_format.format(x_start) + '_' +
-                int_str_format.format(x_end) + '_' +
-                int_str_format.format(y_start) + '_' +
-                int_str_format.format(y_end) + '_'
+                int_str_format.format(r_start) + '_' +
+                int_str_format.format(r_end) + '_' +
+                int_str_format.format(c_start) + '_' +
+                int_str_format.format(c_end) + '_'
                 )
     # put peaks in a nice format
     trees_global = np.zeros(np.shape(trees_local))
-    trees_global[:, 0] = trees_local[:, 0] + x_start
-    trees_global[:, 1] = trees_local[:, 1] + y_start
+    trees_global[:, 0] = trees_local[:, 0] + r_start
+    trees_global[:, 1] = trees_local[:, 1] + c_start
     # grab lat/lon
     trees_lonlat = np.zeros(np.shape(trees_local))
     (trees_lonlat[:, 0], trees_lonlat[:, 1]) = (
         proj_rc_2_latlon(trees_global[:, 0], trees_global[:, 1],
                          ds_all))
     # store it
-    plant_dict = {'store_id': store_id, 'x_start': x_start, 'x_end': x_end,
-                  'y_start': y_start, 'y_end': y_end,
+    plant_dict = {'store_id': store_id, 'r_start': r_start, 'r_end': r_end,
+                  'c_start': c_start, 'c_end': c_end,
                   'trees_local': trees_local,
                   'trees_global': trees_global,
                   'trees_lonlat': trees_lonlat}
@@ -250,20 +296,20 @@ def main(sat_file, plot_flag):
     # get tif data
     ds_all = rasterio.open(sat_file)
     # get raster bands for a subset
-    x_start = ds_all.height // 2
-    y_start = ds_all.width // 2
-    x_del = 1000
-    y_del = 1000
-    x_end = x_start + 2 * x_del
-    y_end = y_start + 2 * y_del
+    r_start = ds_all.height // 2
+    c_start = ds_all.width // 2
+    r_del = 1000
+    c_del = 1000
+    r_end = r_start + 2 * r_del
+    c_end = c_start + 2 * c_del
     counter = 0
     tree_coords_all = []
     tree_lonlat_all = []
     # loop over subsets
-    for xs in np.arange(x_start, x_end, x_del):
-        for ys in np.arange(y_start, y_end, y_del):
-            tree_dict = find_peaks_for_subset(ds_all, xs, ys,
-                                              x_del, y_del, plot_flag)
+    for rs in np.arange(r_start, r_end, r_del):
+        for cs in np.arange(c_start, c_end, c_del):
+            tree_dict = find_peaks_for_subset(ds_all, rs, rs+r_del,
+                                              cs, cs + c_del, plot_flag)
             # store just the global tree coordinates
             if counter == 0:
                 tree_coords_all = tree_dict['trees_global']
