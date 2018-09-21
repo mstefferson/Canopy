@@ -9,6 +9,7 @@ import geopandas
 import pyproj
 import rasterio
 import src.models
+import src.plot
 
 
 def get_latlon_tree_file(filename):
@@ -180,7 +181,7 @@ def find_peaks_for_subset(ds_all, r_start, r_end, c_start, c_end, plot_flag):
     trees_local = src.models.detect_peaks(plant_data)
     # plot it
     if plot_flag:
-        plot_satellite_image(band_data, plant_data, tree_loc)
+        src.plot.plot_satellite_image(band_data, plant_data, trees_local)
     # store output
     plant_dict = {}
     leading_zeros = int(np.ceil(np.log10(np.max([ds_all.width,
@@ -256,10 +257,10 @@ def main(sat_file, plot_flag):
     # get raster bands for a subset
     r_start = ds_all.height // 2
     c_start = ds_all.width // 2
-    r_del = 1000
-    c_del = 1000
-    r_end = r_start + 2 * r_del
-    c_end = c_start + 2 * c_del
+    r_del = 350
+    c_del = 350
+    r_end = r_start + r_del
+    c_end = c_start + c_del
     counter = 0
     tree_coords_all = []
     tree_lonlat_all = []

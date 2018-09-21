@@ -75,7 +75,7 @@ def pixel_detect_model(array_with_peaks):
     (reg_r, reg_c) = analyze_model.divide_image_2_regions(num_r, num_c,
                                                           num_reg_r, num_reg_c)
     # build bounding box output
-    reg_coors = analyze_model.put_labels_2_regions(num_r, num_c, num_reg_r
+    reg_coors = analyze_model.put_labels_2_regions(num_r, num_c, num_reg_r,
                                                    num_reg_c, y)
     output = analyze_model.reg_coors_2_output(reg_coors, num_reg_r,
                                               num_reg_c, y)

@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 def plot_satellite_image(band_data, plant_data, tree_loc):
@@ -37,7 +38,7 @@ def plot_satellite_image(band_data, plant_data, tree_loc):
     plt.subplot(2, 3, 6)
     imgplot = plt.imshow(plant_data)
     # plot trees (x and y are switched)
-    plt.scatter(tree_loc[1], tree_loc[0], color='r')
+    plt.scatter(tree_loc[:, 1], tree_loc[:, 0], color='r')
     plt.title('Plant detect')
     plt.show()
     # st.pyplot()
