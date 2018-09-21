@@ -2,6 +2,7 @@ from scipy.ndimage.filters import maximum_filter
 from scipy.ndimage.morphology import generate_binary_structure, binary_erosion
 import numpy as np
 # from src.analyze_model import build_outcome_vecs
+# from src.analyze_model import *
 import src.analyze_model
 
 
@@ -70,13 +71,15 @@ def pixel_detect_model(array_with_peaks):
     tree_guess[:, 2] = y
     tree_guess[:, 3] = w
     tree_guess[:, 4] = h
-    y = analyze_model.build_outcome_vecs(tree_guess, 16)
+    print('Predicting {} trees'.format(num_peaks))
+    y = src.analyze_model.build_outcome_vecs(tree_guess, 16)
     # get regions
-    (reg_r, reg_c) = analyze_model.divide_image_2_regions(num_r, num_c,
-                                                          num_reg_r, num_reg_c)
+    (reg_r, reg_c) = src.analyze_model.divide_image_2_regions(num_r, num_c,
+                                                              num_reg_r,
+                                                              num_reg_c)
     # build bounding box output
-    reg_coors = analyze_model.put_labels_2_regions(num_r, num_c, num_reg_r,
-                                                   num_reg_c, y)
-    output = analyze_model.reg_coors_2_output(reg_coors, num_reg_r,
-                                              num_reg_c, y)
+    reg_coors = src.analyze_model.put_labels_2_regions(num_r, num_c,
+                                                       num_reg_r, num_reg_c, y)
+    output = src.analyze_model.reg_coors_2_output(reg_coors, num_reg_r,
+                                                  num_reg_c, y)
     return output

@@ -9,6 +9,7 @@ import geopandas
 import pyproj
 import rasterio
 import src.models
+import imageio
 
 
 def get_latlon_tree_file(filename):
@@ -64,6 +65,86 @@ def proj_latlon_2_rc(lon, lat, dataset):
     # convert rows and columns to xy map project
     (r, c) = rasterio.transform.rowcol(dataset.transform, x, y)
     return (int(r), int(c))
+
+
+def build_test_train(sat_file, num_images, delta=200,
+                     split=0.3, c_channels=[0, 1, 3]):
+    def save_data(sat_data, coors, num2save, num_total, path, fid):
+        look_up_name = 'key'
+        look_up_f = open(path + look_up_name + '.txt', 'w+')
+        look_up_dict = {}
+        # set str format for save name
+        num_dec = int(np.ceil(np.log10(num_total))) + 1
+        save_str = 'image_{:0' + str(num_dec) + 'd}'
+        for ii in np.arange(num2save):
+            # get subset
+            band_data = get_satellite_subset(sat_data,
+                                             coors[ii, 0],
+                                             coors[ii, 1],
+                                             coors[ii, 2],
+                                             coors[ii, 3])
+            # update band to save based on color channels
+            # must be saved as integars from 0, 255
+            band2save = np.array(255*band_data[:, :, c_channels],
+                                 dtype=np.uint8)
+            # save everything
+            img_save_name = save_str.format(fid+ii) + '.jpg'
+            # same image
+            imageio.imwrite(path + img_save_name, band2save)
+            # update lookup dict
+            look_up_dict[img_save_name] = train_coors[ii, :]
+            # update lookup txt file
+            line2save = (img_save_name
+                         + ' ' + str(coors[ii, 0])
+                         + ' ' + str(coors[ii, 1])
+                         + ' ' + str(coors[ii, 2])
+                         + ' ' + str(coors[ii, 3])
+                         + '\n')
+            look_up_f.write(line2save)
+        # save lookup dictionary
+        pickle.dump(look_up_dict, open(path + look_up_name + '.pkl', 'wb'))
+        # close txt file
+        look_up_f.close()
+
+    # get sat data
+    sat_data = rasterio.open(sat_file)
+    # get number of rows and columns
+    num_r = sat_data.height
+    num_c = sat_data.width
+    # find all possible subsections
+    r_min = num_r / 4
+    r_max = 3*num_r / 4
+    c_min = num_c / 4
+    c_max = 3*num_c / 4
+    # get all possible row/column starting points
+    r_start_all = np.arange(r_min, r_max, delta)
+    c_start_all = np.arange(r_min, r_max, delta)
+    # get random sample
+    r_start = np.random.choice(r_start_all, num_images)
+    c_start = np.random.choice(c_start_all, num_images)
+    # coordinates
+    start_coord = np.array(
+        [r_start, c_start]).transpose()[:num_images].astype('int')
+    # build full array (r_start, r_end, c_start, c_end)
+    all_coors = np.zeros((num_images, 4))
+    all_coors[:, 0] = start_coord[:, 0]
+    all_coors[:, 1] = start_coord[:, 0] + delta
+    all_coors[:, 2] = start_coord[:, 1]
+    all_coors[:, 3] = start_coord[:, 1] + delta
+    # split into test/train
+    all_coors = all_coors.astype('int')
+    num_test = int(np.floor(num_images * split))
+    num_train = int(num_images - num_test)
+    train_coors = all_coors[:num_train, :]
+    test_coors = all_coors[num_train:, :]
+    # save train
+    train_path = '/Users/mike/Insight/Tree_bot/data/train/images/'
+    save_data(sat_data, train_coors, num_train,
+              num_images, train_path, 0)
+    # save test
+    test_path = '/Users/mike/Insight/Tree_bot/data/test/images/'
+    save_data(sat_data, test_coors, num_test,
+              num_images, test_path, num_train)
 
 
 def proj_rc_2_latlon(r, c, dataset):

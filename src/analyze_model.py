@@ -76,8 +76,8 @@ def build_outcome_vecs(label_mat, num_labels):
     # first index 1 (100% prob of object)
     outcome_vecs[:, 0] = 1
     # next elements are lo
-    print(np.shape(outcome_vecs), np.shape(label_mat[:, 1:]))
-    outcome_vecs[:, 1:5] = label_mat[:, 1:]
+    # set positions
+    outcome_vecs[:, 1:4] = label_mat[:, 1:4]
     # set class to one based on label
     classes_2_set = label_mat[:, 0].astype('int')
     outcome_vecs[:, classes_2_set] = 1
