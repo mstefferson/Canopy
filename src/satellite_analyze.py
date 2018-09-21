@@ -9,7 +9,6 @@ import geopandas
 import pyproj
 import rasterio
 import src.models
-import src.plot
 
 
 def get_latlon_tree_file(filename):
@@ -130,7 +129,7 @@ def get_tree_finder_image(band_data, drop_thres=0.05):
     Inputs:
         band_data (np.array, size=[r_del, c_del, 4]): The rastered image
             data for all bands
-        Threshold (float, optinal): The threshold peak value for
+        Threshold (float, optional): The threshold peak value for
             counting it as a tree. 0.05 seems to work
     Returns:
         plant_data (np.array, size=[r_del, c_del]): A map that is strongly
@@ -152,12 +151,11 @@ def get_tree_finder_image(band_data, drop_thres=0.05):
     return plant_data
 
 
-def find_peaks_for_subset(ds_all, r_start, r_end, c_start, c_end, plot_flag):
+def find_peaks_for_subset(ds_all, r_start, r_end, c_start, c_end):
     '''
     Description:
         Grabs a data subset and finds all the trees. This is a wrapper
-        for many functions that: grab subset, gets plant data, find trees,
-        plots
+        for many functions that: grab subset, gets plant data, find trees
     Inputs:
         ds_all (osgeo.gdal.Dataset): Gdal data structure from opening a tif,
             ds_all = gldal.Open('...')
@@ -165,7 +163,6 @@ def find_peaks_for_subset(ds_all, r_start, r_end, c_start, c_end, plot_flag):
         c_start (int): Initial column pixel number of subset
         r_del (int): Width of subset in pixels along rows
         c_del (int): Width of subset in pixels along columns
-        plot_flag (bool): Plot the subset
     Returns:
         plant_dict (dict): summary of tree locations and row/col indices
     Updates:
@@ -179,9 +176,6 @@ def find_peaks_for_subset(ds_all, r_start, r_end, c_start, c_end, plot_flag):
     plant_data = get_tree_finder_image(band_data)
     # get peaks
     trees_local = src.models.detect_peaks(plant_data)
-    # plot it
-    if plot_flag:
-        src.plot.plot_satellite_image(band_data, plant_data, trees_local)
     # store output
     plant_dict = {}
     leading_zeros = int(np.ceil(np.log10(np.max([ds_all.width,
@@ -214,7 +208,7 @@ def find_peaks_for_subset(ds_all, r_start, r_end, c_start, c_end, plot_flag):
     return plant_dict
 
 
-def main(sat_file, plot_flag):
+def main(sat_file):
     '''
     Description:
         Loops over an entire satellite image, divides it into subset,
@@ -222,7 +216,6 @@ def main(sat_file, plot_flag):
         tree locations (in pixels) to files as a pkl
     Inputs:
         sat_file (str): Path to satellite tif file
-        plot_flag (bool): Plot the subset
     Returns:
         None
     Updates:
@@ -268,7 +261,7 @@ def main(sat_file, plot_flag):
     for rs in np.arange(r_start, r_end, r_del):
         for cs in np.arange(c_start, c_end, c_del):
             tree_dict = find_peaks_for_subset(ds_all, rs, rs+r_del,
-                                              cs, cs + c_del, plot_flag)
+                                              cs, cs + c_del)
             # store just the global tree coordinates
             if counter == 0:
                 tree_coords_all = tree_dict['trees_global']
@@ -294,12 +287,11 @@ if __name__ == '__main__':
     Description:
         Takes in commandline arguements and self main()
     Example call:
-        python src/satellite_analyze data/raw/athens_satellite.tif --plot=true
+        python src/satellite_analyze data/raw/athens_satellite.tif
     '''
     # parse inputs
     parser = argparse.ArgumentParser()
     parser.add_argument('sat_file', type=str, help='path to satellite tif')
-    parser.add_argument('--plot', type=bool, default=False, help='plot flag')
     args = parser.parse_args()
     # run main
-    main(args.sat_file, args.plot)
+    main(args.sat_file)
