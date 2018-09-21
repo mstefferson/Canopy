@@ -10,6 +10,7 @@ import pickle
 import geopandas
 import pyproj
 import rasterio
+import src.models
 
 
 def get_latlon_tree_file(filename):
@@ -77,47 +78,6 @@ def proj_rc_2_latlon(r, c, dataset):
     # transform xy to lat/lon
     lon, lat = pyproj.transform(in_proj, out_proj, x, y)
     return (lon, lat)
-
-
-def detect_peaks(array_with_peaks):
-    """
-    Description:
-    Takes a 2D array and detects all peaks using the local maximum filter.
-    Code adapted from:
-    https://stackoverflow.com/questions/3684484/peak-detection-in-a-2d-array
-    Inputs:
-        array_with_peaks (np.array): 2d array to find peaks of
-    Returns:
-        peaks (np.array, size=[num_trees, 2]): the row/column
-            coordinates for all tree found
-    Updates:
-        N/A
-    Write to file:
-        N/A
-    """
-    # define an 8-connected neighborhood
-    neighborhood = generate_binary_structure(2, 2)
-
-    # apply the local maximum filter; all pixel of maximal value
-    # in their neighborhood are set to 1
-    local_max = maximum_filter(array_with_peaks,
-                               footprint=neighborhood) == array_with_peaks
-    # remove background from image
-    # we create the mask of the background
-    background = (array_with_peaks == 0)
-    # Erode background and border
-    eroded_background = binary_erosion(background,
-                                       structure=neighborhood, border_value=1)
-    # we obtain the final mask, containing only peaks,
-    # by removing the background from the local_max mask (xor operation)
-    peak_mask = local_max ^ eroded_background
-    # grab the peaks
-    where_peaks = np.where(peak_mask)
-    # put them in np array
-    peaks = np.zeros((len(where_peaks[0]), 2))
-    peaks[:, 0] = where_peaks[0]
-    peaks[:, 1] = where_peaks[1]
-    return peaks
 
 
 def get_satellite_subset(ds_all, r_start, r_end, c_start, c_end):
@@ -219,7 +179,7 @@ def find_peaks_for_subset(ds_all, r_start, r_end, c_start, c_end, plot_flag):
     # get tree data
     plant_data = get_tree_finder_image(band_data)
     # get peaks
-    trees_local = detect_peaks(plant_data)
+    trees_local = src.models.detect_peaks(plant_data)
     # plot it
     if plot_flag:
         plot_satellite_image(band_data, plant_data, tree_loc)
