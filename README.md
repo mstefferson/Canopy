@@ -32,7 +32,14 @@ git push origin $branch_name
 - This could include cloud command line tools (i.e. gsutil), package managers (i.e. conda), etc.
 
 ### Get docker image
+```
 docker pull mstefferson/tree_bot:latest
+```
+Or build it
+```
+cd build
+
+docker image build -t mstefferson/tree_bot:latest .
 ```
 # Example
 - A
@@ -107,3 +114,4 @@ docker pull mstefferson/tree_bot:latest
 # Step 1
 # Step 2
 ```
+jk
