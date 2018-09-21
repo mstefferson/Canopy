@@ -4,8 +4,6 @@ import glob
 import numpy as np
 import argparse
 from pytictoc import TicToc
-from scipy.ndimage.filters import maximum_filter
-from scipy.ndimage.morphology import generate_binary_structure, binary_erosion
 import pickle
 import geopandas
 import pyproj

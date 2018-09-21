@@ -15,7 +15,6 @@ def put_labels_2_regions(num_r, num_c, num_reg_r, num_reg_c, y):
     (reg_map_r, reg_map_c) = divide_image_2_regions(num_r, num_c,
                                                     num_reg_r, num_reg_c)
     # convert x, y to region
-    print(np.shape(y))
     reg_r = reg_map_r[(y[:, 1] * num_r).astype('int')]
     reg_c = reg_map_c[(y[:, 2] * num_c).astype('int')]
     reg_coors = [(x, y) for (x, y) in zip(reg_r, reg_c)]
@@ -28,7 +27,7 @@ def built_out_from_file(filename):
     num_reg_r = 25
     num_reg_c = 25
     label_mat = parse_labels(filename)
-    y = build_outcome_vecs(label_mat, 15)
+    y = build_outcome_vecs(label_mat, 16)
     reg_coors = put_labels_2_regions(num_r, num_c, num_reg_r,
                                      num_reg_c, y)
     output = reg_coors_2_output(reg_coors, num_reg_r, num_reg_c, y)
@@ -77,6 +76,7 @@ def build_outcome_vecs(label_mat, num_labels):
     # first index 1 (100% prob of object)
     outcome_vecs[:, 0] = 1
     # next elements are lo
+    print(np.shape(outcome_vecs), np.shape(label_mat[:, 1:]))
     outcome_vecs[:, 1:5] = label_mat[:, 1:]
     # set class to one based on label
     classes_2_set = label_mat[:, 0].astype('int')

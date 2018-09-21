@@ -1,4 +1,8 @@
+from scipy.ndimage.filters import maximum_filter
+from scipy.ndimage.morphology import generate_binary_structure, binary_erosion
 import numpy as np
+# from src.analyze_model import build_outcome_vecs
+import src.analyze_model
 
 
 def detect_peaks(array_with_peaks):
@@ -55,21 +59,24 @@ def pixel_detect_model(array_with_peaks):
     # get position and have fake widths/heights
     x = peaks[:, 0] / num_r
     y = peaks[:, 1] / num_c
-    w = 0.03 * np.oneslike(peaks[:, 0])
-    h = 0.03 * np.oneslike(peaks[:, 0])
+    w = 0.03 * np.ones_like(peaks[:, 0])
+    h = 0.03 * np.ones_like(peaks[:, 0])
     # build a fake data set just like
     # a labeled file
-    tree_guess = np.zeros(num_peaks, 5+1)
+    tree_guess = np.zeros((num_peaks, 5+1))
     # classification number 15 is tree currently
     tree_guess[:, 0] = 15
     tree_guess[:, 1] = x
     tree_guess[:, 2] = y
     tree_guess[:, 3] = w
     tree_guess[:, 4] = h
-    outcome_vec = src.analayze_model(tree_guess, 16)
+    y = analyze_model.build_outcome_vecs(tree_guess, 16)
     # get regions
-    (reg_r, reg_c) = divide_image_2_regions(num_r, num_c, num_reg_r, num_reg_c)
+    (reg_r, reg_c) = analyze_model.divide_image_2_regions(num_r, num_c,
+                                                          num_reg_r, num_reg_c)
     # build bounding box output
-    bb_out = put_labeled_2_bb_output(num_r, num_reg_c, num_reg_r,
-                                     num_div_c, outcome_vec)
-    return bb_out
+    reg_coors = analyze_model.put_labels_2_regions(num_r, num_c, num_reg_r
+                                                   num_reg_c, y)
+    output = analyze_model.reg_coors_2_output(reg_coors, num_reg_r,
+                                              num_reg_c, y)
+    return output
