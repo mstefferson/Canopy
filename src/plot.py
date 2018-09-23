@@ -23,6 +23,7 @@ def plot_satellite_image(band_data, plant_data,
     Write to file:
         N/A
     '''
+    # set up axis depending on flags
     if plot_all is True:
         fig, axs = plt.subplots(2, 3, figsize=(18, 12))
         axs = np.reshape(axs, [6, ])
@@ -30,24 +31,21 @@ def plot_satellite_image(band_data, plant_data,
         # loop over bands
         for index in np.arange(4):
             # plot it
-            plt.subplot(2, 3, index+1)
-            plt.title(color_scheme[index])
-            imgplot = plt.imshow(band_data[:, :, index])
-        plot_ind = 5
+            axs[index].imshow(band_data[:, :, index])
+            axs[index].set_title(color_scheme[index])
+        plot_ind = 4
     else:
         fig, axs = plt.subplots(1, 2, figsize=(18, 12))
         axs = np.reshape(axs, [2, ])
-        plot_ind = 1
+        plot_ind = 0
     # plot  all colors
-    plt.subplot(2, 3, plot_ind)
+    axs[plot_ind].imshow(band_data[:, :, colorbands])
+    axs[plot_ind].set_title('All colors')
     plot_ind += 1
-    plt.title('All colors')
-    imgplot = plt.imshow(band_data[:, :, colorbands])
-    # plot plant_data
-    plt.subplot(2, 3, plot_ind)
-    imgplot = plt.imshow(plant_data)
+    axs[plot_ind].imshow(plant_data)
+    axs[plot_ind].set_title('All colors')
+    # plot trees
     if tree_loc is not None:
         # plot trees (x and y are switched)
-        plt.scatter(tree_loc[:, 1], tree_loc[:, 0], color='r')
-        plt.title('Plant detect')
-        plt.show()
+        axs[plot_ind].scatter(tree_loc[:, 1], tree_loc[:, 0], color='r')
+        axs[plot_ind].set_title('Plant detect')

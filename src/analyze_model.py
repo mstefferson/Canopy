@@ -31,7 +31,7 @@ def build_in_out_region_map(num_r_in, num_c_in, num_r_out, num_c_out):
     return region_map_r, region_map_c
 
 
-def output_vec_2_to_bb_output(y, reg_map_r, region_map_c, num_r, num_c):
+def output_vec_2_to_bb_output(y, reg_coors, num_r, num_c):
     '''
     Description:
         Given an output vector for each label, put it into
@@ -42,8 +42,8 @@ def output_vec_2_to_bb_output(y, reg_map_r, region_map_c, num_r, num_c):
             vectors, where n depends on the number of classes/anchor boxes
         num_r (int): number of rows of output bounding box matrix
         num_c (int): number of cols of output bounding box matrix
-        reg_map_r (int): row region map
-        reg_map_c (int): col region map
+        reg_coors (np.array(num_trees, 2): the coordinates of the localized
+            objects
     Returns:
         output (np.array, size=[num_r_out, num_c_out, n]): output array
             for each bounding box regional. n is the length of the output
@@ -56,7 +56,7 @@ def output_vec_2_to_bb_output(y, reg_map_r, region_map_c, num_r, num_c):
     num_2_fill = len(reg_coors)
     output = np.zeros((num_r, num_c, np.shape(y)[1]))
     for index in np.arange(num_2_fill):
-        output[reg_coors[index][0], reg_coors[index][1], :] = y[index, :]
+        output[reg_coors[index, 0], reg_coors[index, 1], :] = y[index, :]
     return output
 
 
@@ -155,8 +155,9 @@ def built_out_from_file(filename, num_r_in=200, num_c_in=200,
     # convert x, y to region
     reg_r = reg_map_r[(y[:, 1] * num_r_in).astype('int')]
     reg_c = reg_map_c[(y[:, 2] * num_c_in).astype('int')]
+    reg_coors = np.array([reg_r, reg_c]).transpose()
     # build output vector
-    bb_output = output_vec_2_to_bb_output(y, reg_r, reg_c,
+    bb_output = output_vec_2_to_bb_output(y, reg_coors,
                                           num_r_out, num_c_out)
     return bb_output
 

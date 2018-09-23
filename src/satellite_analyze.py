@@ -309,7 +309,7 @@ def get_tree_finder_image(band_data, drop_thres=0.05):
         where there are trees from the rastered data. The
         output uses the green and IR bands to get peaks along trees
     Args:
-        band_data (np.array, size=[r_del, c_del, 4]): The rastered image
+        band_data (np.array, size=[r_del, c_del, 3/4]): The rastered image
             data for all bands
         Threshold (float, optional): The threshold peak value for
             counting it as a tree. 0.05 seems to work
@@ -323,12 +323,23 @@ def get_tree_finder_image(band_data, drop_thres=0.05):
     '''
     # All color bands peak at white light (which building are), get a average
     # to sub it out
-    data_ave = ((band_data[:, :, 0] + band_data[:, :, 1] + band_data[:, :, 2])
-                / 3)
-    # Plants reflect green and IR so take a weighted average and subtract
-    # out background. This weighted average is just based on messing
-    # around with the data
-    plant_data = (3*band_data[:, :, 1] + band_data[:, :, 3]) / 4 - data_ave
+    # handle a three vs four bands differently
+    # 3 bands: r, g, IR
+    if np.shape(band_data)[2] == 3:
+        data_ave = ((band_data[:, :, 0] + band_data[:, :, 1])
+                    / 2)
+        # Plants reflect green and IR so take a weighted average and subtract
+        # out background. This weighted average is just based on messing
+        # around with the data
+        plant_data = (3*band_data[:, :, 1] + band_data[:, :, 2]) / 4 - data_ave
+    # 4 bands: r, g, b, IR
+    else:
+        data_ave = ((band_data[:, :, 0] + band_data[:, :, 1] +
+                     band_data[:, :, 2]) / 3)
+        # Plants reflect green and IR so take a weighted average and subtract
+        # out background. This weighted average is just based on messing
+        # around with the data
+        plant_data = (3*band_data[:, :, 1] + band_data[:, :, 3]) / 4 - data_ave
     plant_data[plant_data < drop_thres] = 0
     return plant_data
 

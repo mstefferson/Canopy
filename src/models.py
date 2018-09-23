@@ -46,13 +46,14 @@ def detect_peaks(array_with_peaks):
     return peaks
 
 
-def pixel_detect_model(array_with_peaks):
+def pixel_detect_model(band_data):
     """
     Description:
         Object locatization model built around peak detection
     Inputs:
-        array_with_peaks (np.array): 2d array to find peaks of
-    Returns:
+        band_data (np.array, size=[num_r, num_c, 3/4): raster data normalized
+        from 0 to 1
+    jjjkk/Returns:
         bb_output (np.array, size=[num_r_out, num_c_out, n]): output array
             for each bounding box regional. n is the length of the output
             array, n = (5+num_classes). Note, no anchor boxes!!!
@@ -62,12 +63,13 @@ def pixel_detect_model(array_with_peaks):
         N/A
     """
     # get size of array
-    (num_r, num_c) = np.shape(array_with_peaks)
+    plant_data = src.satellite_analyze.get_tree_finder_image(band_data)
+    (num_r, num_c) = np.shape(plant_data)
     # set number of regions to something arbitrary
     num_reg_r = 25
     num_reg_c = 25
     # get peaks from  peak detect
-    peaks = detect_peaks(array_with_peaks)
+    peaks = detect_peaks(plant_data)
     num_peaks = np.shape(peaks)[0]
     # get position and have fake widths/heights
     x = peaks[:, 0] / num_r
@@ -88,13 +90,14 @@ def pixel_detect_model(array_with_peaks):
     print('Predicting {} trees'.format(num_peaks))
     y = src.analyze_model.build_outcome_vecs(tree_guess, 16)
     # get regions
-    (reg_r, reg_c) = src.analyze_model.build_in_out_region_map(num_r, num_c,
-                                                               num_reg_r,
-                                                               num_reg_c)
+    (reg_map_r, reg_map_c) = src.analyze_model.build_in_out_region_map(
+        num_r, num_c, num_reg_r, num_reg_c)
     # convert x, y to region
     reg_r = reg_map_r[(tree_guess[:, 1] * num_r).astype('int')]
     reg_c = reg_map_c[(tree_guess[:, 2] * num_c).astype('int')]
+    reg_coors = np.array([reg_r, reg_c]).transpose()
     # build output vector
-    bb_output = output_vec_2_to_bb_output(y, reg_r, reg_c,
-                                          num_reg_r, num_reg_c)
+    bb_output = src.analyze_model.output_vec_2_to_bb_output(y, reg_coors,
+                                                            num_reg_r,
+                                                            num_reg_c)
     return bb_output
