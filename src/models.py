@@ -72,8 +72,9 @@ def pixel_detect_model(band_data):
     peaks = detect_peaks(plant_data)
     num_peaks = np.shape(peaks)[0]
     # get position and have fake widths/heights
-    x = peaks[:, 0] / num_r
-    y = peaks[:, 1] / num_c
+    # for lableImc, r->y, c->x
+    x = peaks[:, 1] / num_r
+    y = peaks[:, 0] / num_c
     # make up random widths/heights
     w = 0.03 * np.ones_like(peaks[:, 0])
     h = 0.03 * np.ones_like(peaks[:, 0])
@@ -88,7 +89,9 @@ def pixel_detect_model(band_data):
     tree_guess[:, 3] = w
     tree_guess[:, 4] = h
     print('Predicting {} trees'.format(num_peaks))
-    y = src.analyze_model.build_outcome_vecs(tree_guess, 16)
+    print(num_classes)
+    y = src.analyze_model.build_outcome_vecs(tree_guess, num_classes)
+    print(y.shape)
     # get regions
     (reg_map_r, reg_map_c) = src.analyze_model.build_in_out_region_map(
         num_r, num_c, num_reg_r, num_reg_c)
