@@ -135,7 +135,7 @@ def built_out_from_file(filename, num_r_in=200, num_c_in=200,
         num_r_out (int, optional): number of rows in bounding box output
         num_c_out (int, optional): number of columns in bounding box output
     Returns:
-        output (np.array, size=[num_r_out, num_c_out, n]): output array
+        bb_output (np.array, size=[num_r_out, num_c_out, n]): output array
             for each bounding box regional. n is the length of the output
             array, n = (5+num_classes). Note, no anchor boxes!!!
     Updates:
@@ -156,8 +156,9 @@ def built_out_from_file(filename, num_r_in=200, num_c_in=200,
     reg_r = reg_map_r[(y[:, 1] * num_r_in).astype('int')]
     reg_c = reg_map_c[(y[:, 2] * num_c_in).astype('int')]
     # build output vector
-    output = output_vec_2_to_bb_output(y, reg_r, reg_c, num_r_out, num_c_out)
-    return output
+    bb_output = output_vec_2_to_bb_output(y, reg_r, reg_c,
+                                          num_r_out, num_c_out)
+    return bb_output
 
 
 def cost_function(y_bb_true, y_bb_pred):

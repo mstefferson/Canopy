@@ -1,8 +1,6 @@
 from scipy.ndimage.filters import maximum_filter
 from scipy.ndimage.morphology import generate_binary_structure, binary_erosion
 import numpy as np
-# from src.analyze_model import build_outcome_vecs
-# from src.analyze_model import *
 import src.analyze_model
 
 
@@ -49,6 +47,20 @@ def detect_peaks(array_with_peaks):
 
 
 def pixel_detect_model(array_with_peaks):
+    """
+    Description:
+        Object locatization model built around peak detection
+    Inputs:
+        array_with_peaks (np.array): 2d array to find peaks of
+    Returns:
+        bb_output (np.array, size=[num_r_out, num_c_out, n]): output array
+            for each bounding box regional. n is the length of the output
+            array, n = (5+num_classes). Note, no anchor boxes!!!
+    Updates:
+        N/A
+    Write to file:
+        N/A
+    """
     # get size of array
     (num_r, num_c) = np.shape(array_with_peaks)
     # set number of regions to something arbitrary
@@ -60,13 +72,15 @@ def pixel_detect_model(array_with_peaks):
     # get position and have fake widths/heights
     x = peaks[:, 0] / num_r
     y = peaks[:, 1] / num_c
+    # make up random widths/heights
     w = 0.03 * np.ones_like(peaks[:, 0])
     h = 0.03 * np.ones_like(peaks[:, 0])
     # build a fake data set just like
     # a labeled file
-    tree_guess = np.zeros((num_peaks, 5+1))
-    # classification number 15 is tree currently
-    tree_guess[:, 0] = 15
+    num_classes = len(open('/app/data/train/labels/classes.txt').readlines())
+    tree_guess = np.zeros((num_peaks, 5))
+    # Build a matrix liek you'd get from labels
+    tree_guess[:, 0] = num_classes
     tree_guess[:, 1] = x
     tree_guess[:, 2] = y
     tree_guess[:, 3] = w
@@ -74,12 +88,13 @@ def pixel_detect_model(array_with_peaks):
     print('Predicting {} trees'.format(num_peaks))
     y = src.analyze_model.build_outcome_vecs(tree_guess, 16)
     # get regions
-    (reg_r, reg_c) = src.analyze_model.divide_image_2_regions(num_r, num_c,
-                                                              num_reg_r,
-                                                              num_reg_c)
-    # build bounding box output
-    reg_coors = src.analyze_model.put_labels_2_regions(num_r, num_c,
-                                                       num_reg_r, num_reg_c, y)
-    output = src.analyze_model.reg_coors_2_output(reg_coors, num_reg_r,
-                                                  num_reg_c, y)
-    return output
+    (reg_r, reg_c) = src.analyze_model.build_in_out_region_map(num_r, num_c,
+                                                               num_reg_r,
+                                                               num_reg_c)
+    # convert x, y to region
+    reg_r = reg_map_r[(tree_guess[:, 1] * num_r).astype('int')]
+    reg_c = reg_map_c[(tree_guess[:, 2] * num_c).astype('int')]
+    # build output vector
+    bb_output = output_vec_2_to_bb_output(y, reg_r, reg_c,
+                                          num_reg_r, num_reg_c)
+    return bb_output
