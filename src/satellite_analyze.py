@@ -41,8 +41,7 @@ def get_xy_tree_file(filename):
 
 
 def get_known_tree_all(transfunc=get_latlon_tree_file):
-    # root = '/app/'
-    root = '/Users/mike/Insight/Tree_Bot/'
+    root = '/app/'
     file1 = root + 'data/raw/known_trees/prasino_istorikou_kentou/dendra.shp'
     file2 = root + 'data/raw/known_trees/prasino_istorikou_kentou/glastra.shp'
     file3 = root + 'data/raw/known_trees/prasino_istorikou_kentou/pagkakia.shp'
@@ -138,11 +137,11 @@ def build_test_train(sat_file, num_images, delta=200,
     train_coors = all_coors[:num_train, :]
     test_coors = all_coors[num_train:, :]
     # save train
-    train_path = '/Users/mike/Insight/Tree_bot/data/train/images/'
+    train_path = '/app/data/train/images/'
     save_data(sat_data, train_coors, num_train,
               num_images, train_path, 0)
     # save test
-    test_path = '/Users/mike/Insight/Tree_bot/data/test/images/'
+    test_path = '/app/data/test/images/'
     save_data(sat_data, test_coors, num_test,
               num_images, test_path, num_train)
 
@@ -179,6 +178,11 @@ def get_satellite_subset(ds_all, r_start, r_end, c_start, c_end):
     Write to file:
         N/A
     '''
+    # convert to int
+    r_start = int(r_start)
+    r_end = int(r_end)
+    c_start = int(c_start)
+    c_end = int(c_end)
     # set 4 channels (r,g,b,IR)
     channels = 4
     # calculate width
@@ -190,7 +194,7 @@ def get_satellite_subset(ds_all, r_start, r_end, c_start, c_end):
     # get end point
     r_end = r_start + r_del
     c_end = c_start + c_del
-    for index in np.arange(channels):
+    for index in range(channels):
         band_num = index + 1
         data = ds_all.read(band_num,
                            window=((r_start, r_end), (c_start, c_end)))
