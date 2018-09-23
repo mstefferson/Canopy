@@ -12,7 +12,19 @@ import src.models
 import imageio
 
 
-def get_latlon_tree_file(filename):
+def get_lonlat_tree_file(filename):
+    '''
+    Description:
+        Given a GIS *shp file, return the lat/lon of the recorded points
+    Args:
+        filename (str): Path to *shp file
+    Returns:
+        lonlat (np.array shape=[n, 2]): lon/lat of all recorded points
+    Updates:
+        N/A
+    Write to file:
+        N/A
+    '''
     # Read data using geopandas
     data = geopandas.read_file(filename)
     # map data to lat/long using projection type epsg:4326
@@ -21,30 +33,52 @@ def get_latlon_tree_file(filename):
     lon = data['geometry'].apply(lambda x: x.bounds[0])
     lat = data['geometry'].apply(lambda x: x.bounds[1])
     # store it in numpy array
-    lon_lat = np.zeros((len(lon), 2))
-    lon_lat[:, 0] = lon
-    lon_lat[:, 1] = lat
-    return lon_lat
+    lonlat = np.array([lon, lat]).transpose()
+    return lonlat
 
 
 def get_xy_tree_file(filename):
+    '''
+    Description:
+        Given a GIS *shp file, return the x/y (geospatial coords)
+        of the recorded points
+    Args:
+        filename (str): Path to *shp file
+    Returns:
+        xy (np.array shape=[n, 2]): geospatial coords of all recorded points
+    Updates:
+        N/A
+    Write to file:
+        N/A
+    '''
     # Read data using geopandas
     data = geopandas.read_file(filename)
     # get lat from lon from bounds of point object
     x = data['geometry'].apply(lambda x: x.bounds[0])
     y = data['geometry'].apply(lambda x: x.bounds[1])
     # store it in numpy array
-    xy = np.zeros((len(x), 2))
-    xy[:, 0] = x
-    xy[:, 1] = y
+    xy = np.array([x, y]).transpose()
     return xy
 
 
-def get_known_tree_all(transfunc=get_latlon_tree_file):
-    root = '/app/'
-    file1 = root + 'data/raw/known_trees/prasino_istorikou_kentou/dendra.shp'
-    file2 = root + 'data/raw/known_trees/prasino_istorikou_kentou/glastra.shp'
-    file3 = root + 'data/raw/known_trees/prasino_istorikou_kentou/pagkakia.shp'
+def get_known_tree_all(transfunc=get_lonlat_tree_file):
+    '''
+    Description:
+        Given a GIS *shp file, return the x/y (geospatial coords)
+        of the recorded points
+    Args:
+        filename (str): Path to *shp file
+    Returns:
+        xy (np.array shape=[n, 2]): geospatial coords of all recorded points
+    Updates:
+        N/A
+    Write to file:
+        N/A
+    '''
+    root = '/app/data/raw/sv_gis/sv_gis_2017/'
+    file1 = root + 'dendra.shp'
+    file2 = root + 'glastra.shp'
+    file3 = root + 'pagkakia.shp'
     # get all the data
     data1 = transfunc(file1)
     data2 = transfunc(file2)
@@ -54,7 +88,24 @@ def get_known_tree_all(transfunc=get_latlon_tree_file):
     return data_all
 
 
-def proj_latlon_2_rc(lon, lat, dataset):
+def proj_lonlat_2_rc(lon, lat, dataset):
+    '''
+    Description:
+        Convert lon/lat coordinates to rows and columns in the tif satellite
+        image. Uses pyproj to convert between coordinate systems
+    Args:
+        lon (float): longitude
+        lat (float): latitude
+        dataset (rasterio.io.DatasetReader): Gdal data structure from opening a
+            tif, dataset = rasterio.open('...')
+    Returns:
+        rc (np.array shape=[n, 2]): row/columns in tif file for all
+            recorded points
+    Updates:
+        N/A
+    Write to file:
+        N/A
+    '''
     # input lat/lon
     in_proj = pyproj.Proj(init='epsg:4326')
     # output based on crs of tif/shp
@@ -63,18 +114,73 @@ def proj_latlon_2_rc(lon, lat, dataset):
     x, y = pyproj.transform(in_proj, out_proj, lon, lat)
     # convert rows and columns to xy map project
     (r, c) = rasterio.transform.rowcol(dataset.transform, x, y)
-    return (int(r), int(c))
+    # store it in numpy array
+    rc = np.array([r, c]).transpose()
+    return rc
+
+
+def proj_rc_2_lonlat(r, c, dataset):
+    '''
+    Description:
+        Convert row/columns of tif dataset to lat/lon.
+        Uses pyproj to convert between coordinate systems
+    Args:
+        lon (float): longitude
+        lat (float): latitude
+        dataset (rasterio.io.DatasetReader): Gdal data structure from opening a
+            tif, dataset = rasterio.open('...')
+    Returns:
+        rc (np.array shape=[n, 2]): row/columns in tif file for all
+            recorded points
+    Updates:
+        N/A
+    Write to file:
+        N/A
+    '''
+    # convert rows and columns to xy map project
+    (x, y) = rasterio.transform.xy(dataset.transform, r, c)
+    # input based on crs of tif/shp
+    in_proj = pyproj.Proj(dataset.crs)
+    # output lat/lon
+    out_proj = pyproj.Proj(init='epsg:4326')
+    # transform xy to lat/lon
+    lon, lat = pyproj.transform(in_proj, out_proj, x, y)
+    # store it in numpy array
+    lonlat = np.array([lon, lat]).transpose()
+    return lonlat
 
 
 def build_test_train(sat_file, num_images, delta=200,
-                     split=0.3, c_channels=[0, 1, 3]):
-    def save_data(sat_data, coors, num2save, num_total, path, fid):
+                     split=0.3, c_channels=[0, 1, 3], fid_start=0):
+    '''
+    Description:
+        Builds a test/train set from random squares of a sat_file tif file
+    Args:
+        sat_file (str): path to satellite tif file
+        num_images (int): total number of images in data set
+        delta (int, optional): width/heigth of image in data set
+        split (float, optional): test/train split (frac in test)
+        c_channels (list of ints, optional): three color bands
+            to include in image. Tiff has four: r, g, b, IR
+        fid_start: initial file id to label images. e.g., image_fid.jpg
+    Returns:
+        N/A
+    Updates:
+        N/A
+    Write to file:
+        /app/data/(test,train)/images/image_*,
+        /app/data/(test,train)/images/key*: test and train image data
+            set with keys
+
+    '''
+    def save_data(sat_data, coors, num2save, num_total, path, save_str, fid):
+        '''
+        Description:
+            Nested function that actually writes the files
+        '''
         look_up_name = 'key'
         look_up_f = open(path + look_up_name + '.txt', 'w+')
         look_up_dict = {}
-        # set str format for save name
-        num_dec = int(np.ceil(np.log10(num_total))) + 1
-        save_str = 'image_{:0' + str(num_dec) + 'd}'
         for ii in np.arange(num2save):
             # get subset
             band_data = get_satellite_subset(sat_data,
@@ -136,26 +242,17 @@ def build_test_train(sat_file, num_images, delta=200,
     num_train = int(num_images - num_test)
     train_coors = all_coors[:num_train, :]
     test_coors = all_coors[num_train:, :]
+    # set str format for save name
+    num_dec = int(np.ceil(np.log10(fid + num_total))) + 1
+    save_str = 'image_{:0' + str(num_dec) + 'd}'
     # save train
     train_path = '/app/data/train/images/'
     save_data(sat_data, train_coors, num_train,
-              num_images, train_path, 0)
+              num_images, train_path, save_str, fid)
     # save test
     test_path = '/app/data/test/images/'
     save_data(sat_data, test_coors, num_test,
-              num_images, test_path, num_train)
-
-
-def proj_rc_2_latlon(r, c, dataset):
-    # convert rows and columns to xy map project
-    (x, y) = rasterio.transform.xy(dataset.transform, r, c)
-    # input based on crs of tif/shp
-    in_proj = pyproj.Proj(dataset.crs)
-    # output lat/lon
-    out_proj = pyproj.Proj(init='epsg:4326')
-    # transform xy to lat/lon
-    lon, lat = pyproj.transform(in_proj, out_proj, x, y)
-    return (lon, lat)
+              num_images, test_path, save_str, fid+num_train)
 
 
 def get_satellite_subset(ds_all, r_start, r_end, c_start, c_end):
@@ -163,9 +260,9 @@ def get_satellite_subset(ds_all, r_start, r_end, c_start, c_end):
     Description:
         Returns a numpy data array of the rasted satellite
         image for all bands from a gdal object.
-    Inputs:
-        ds_all (osgeo.gdal.Dataset): Gdal data structure from opening a tif,
-            ds_all = gldal.Open('...')
+    Args:
+        ds_all (rasterio.io.DatasetReader): Gdal data structure from opening a
+            tif, ds_all = rasterio.open('...')
         r_start (int): Initial row pixel number of subset
         c_start (int): Initial column pixel number of subset
         r_end (int): Initial row pixel number of subset
@@ -211,7 +308,7 @@ def get_tree_finder_image(band_data, drop_thres=0.05):
         Returns a np.array that is strongely peaked
         where there are trees from the rastered data. The
         output uses the green and IR bands to get peaks along trees
-    Inputs:
+    Args:
         band_data (np.array, size=[r_del, c_del, 4]): The rastered image
             data for all bands
         Threshold (float, optional): The threshold peak value for
@@ -241,7 +338,7 @@ def find_peaks_for_subset(ds_all, r_start, r_end, c_start, c_end):
     Description:
         Grabs a data subset and finds all the trees. This is a wrapper
         for many functions that: grab subset, gets plant data, find trees
-    Inputs:
+    Args:
         ds_all (osgeo.gdal.Dataset): Gdal data structure from opening a tif,
             ds_all = gldal.Open('...')
         r_start (int): Initial row pixel number of subset
@@ -282,7 +379,7 @@ def find_peaks_for_subset(ds_all, r_start, r_end, c_start, c_end):
     # grab lat/lon
     trees_lonlat = np.zeros(np.shape(trees_local))
     (trees_lonlat[:, 0], trees_lonlat[:, 1]) = (
-        proj_rc_2_latlon(trees_global[:, 0], trees_global[:, 1],
+        proj_rc_2_lonlat(trees_global[:, 0], trees_global[:, 1],
                          ds_all))
     # store it
     plant_dict = {'store_id': store_id, 'r_start': r_start, 'r_end': r_end,
@@ -299,7 +396,7 @@ def main(sat_file):
         Loops over an entire satellite image, divides it into subset,
         and finds trees for each subset. Writes a list of all
         tree locations (in pixels) to files as a pkl
-    Inputs:
+    Args:
         sat_file (str): Path to satellite tif file
     Returns:
         None
