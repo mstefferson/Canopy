@@ -1,6 +1,6 @@
 # Data
-#data/*/
 data/
+!data/data_readme.txt
 config.yaml
 
 # cached/accessory
