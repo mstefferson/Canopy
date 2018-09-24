@@ -1,6 +1,6 @@
 # Data
-#data/*/
 data/
+config.yaml
 
 # cached/accessory
 .ipynb_checkpoints/
@@ -14,6 +14,7 @@ src/.streamlit
 notes.txt
 *pkl
 *log
+*jpg
 notebooks/Scratch.ipynb
 
 # temp files
