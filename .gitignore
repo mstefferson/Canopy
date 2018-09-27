@@ -21,3 +21,6 @@ notebooks/Scratch.ipynb
 *swp
 *swo
 
+# weights
+model_weights/
+
