@@ -1,0 +1,35 @@
+{
+    "model" : {
+        "backend":              "Full Yolo",
+        "input_size":           200,
+        "anchors":              [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
+        "max_box_per_image":    10,        
+        "labels":               ["tree"]
+    },
+
+    "train": {
+        "train_image_folder":   "/home/ubuntu/AutomatedTreeCensus/data/processed/train/images/",
+        "train_annot_folder":   "/home/ubuntu/AutomatedTreeCensus/data/processed/train/labels/",     
+          
+        "train_times":          8,
+        "pretrained_weights":   "",
+        "batch_size":           16,
+        "learning_rate":        1e-4,
+        "nb_epochs":            1,
+        "warmup_epochs":        1,
+
+        "object_scale":         5.0 ,
+        "no_object_scale":      1.0,
+        "coord_scale":          1.0,
+        "class_scale":          1.0,
+
+        "saved_weights_name":   "/home/ubuntu/AutomatedTreeCensus/model_weights/full_yolo_tree.h5",
+        "debug":                true
+    },
+
+    "valid": {
+        "valid_image_folder":   "/home/ubuntu/AutomatedTreeCensus/data/processed/test/images/",
+        "valid_annot_folder":   "/home/ubuntu/AutomatedTreeCensus/data/processed/test/labels/",     
+        "valid_times":          1
+    }
+}
