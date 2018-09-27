@@ -1,0 +1,2 @@
+#!/bin/bash
+docker run --rm -ti -v ${PWD}:/app/ -p 8989:8989 --hostname localhost --ipc=host mstefferson/tree_bot:latest bash

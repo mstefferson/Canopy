@@ -1,0 +1,23 @@
+# Data
+data/
+config.yaml
+
+# cached/accessory
+.ipynb_checkpoints/
+src/*.pyc
+src/__pycache__
+__pycache__
+.streamlit
+src/.streamlit
+
+# unwated files
+notes.txt
+*pkl
+*log
+*jpg
+notebooks/Scratch.ipynb
+
+# temp files
+*swp
+*swo
+

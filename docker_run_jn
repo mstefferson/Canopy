@@ -1,0 +1,3 @@
+#!/bin/bash
+docker run --rm -ti -v ${PWD}:/app/ -p 8989:8989 --hostname 0.0.0.0 --ipc=host mstefferson/tree_bot:latest jupyter notebook --ip 0.0.0.0 --port 8989 --allow-root --no-browser
+
