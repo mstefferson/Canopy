@@ -32,17 +32,14 @@ class YOLO(object):
 
         self.max_box_per_image = max_box_per_image
 
-        ##########################
         # Make the model
-        ##########################
-
         # make the feature extractor layers
         input_image     = Input(shape=(self.input_size, self.input_size, 3))
         self.true_boxes = Input(shape=(1, 1, 1, max_box_per_image , 4))  
 
-        if backend == 'Full Yolo':
+        if backend == 'FullYolo':
             self.feature_extractor = FullYoloFeature(self.input_size)
-        elif backend == 'Tiny Yolo':
+        elif backend == 'TinyYolo':
             self.feature_extractor = TinyYoloFeature(self.input_size)
         else:
             raise Exception('Architecture not supported! Only support Full Yolo, Tiny Yoloat the moment!')
@@ -257,10 +254,7 @@ class YOLO(object):
 
         self.debug = debug
 
-        ############################################
         # Make train and validation generators
-        ############################################
-
         generator_config = {
             'IMAGE_H'         : self.input_size, 
             'IMAGE_W'         : self.input_size,
@@ -284,10 +278,7 @@ class YOLO(object):
                                      
         self.warmup_batches  = warmup_epochs * (train_times*len(train_generator) + valid_times*len(valid_generator))   
 
-        ############################################
         # Compile the model
-        ############################################
-
         optimizer = Adam(lr=learning_rate, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
         self.model.compile(loss=self.custom_loss, optimizer=optimizer)
 
@@ -312,10 +303,7 @@ class YOLO(object):
                                   write_graph=True, 
                                   write_images=False)
 
-        ############################################
-        # Start the training process
-        ############################################        
-
+        # start the training process
         self.model.fit_generator(generator        = train_generator, 
                                  steps_per_epoch  = len(train_generator) * train_times, 
                                  epochs           = warmup_epochs + nb_epochs, 
@@ -326,15 +314,15 @@ class YOLO(object):
                                  workers          = 3,
                                  max_queue_size   = 8)      
 
-        ############################################
         # Compute mAP on the validation set
-        ############################################
         average_precisions = self.evaluate(valid_generator)     
 
         # print evaluation
         for label, average_precision in average_precisions.items():
             print(self.labels[label], '{:.4f}'.format(average_precision))
-        print('mAP: {:.4f}'.format(sum(average_precisions.values()) / len(average_precisions)))         
+        mAP = sum(average_precisions.values()) / len(average_precisions)
+        print('mAP: {:.4f}'.format(mAP)) 
+        return average_precisions, mAP
 
     def evaluate(self, 
                  generator, 

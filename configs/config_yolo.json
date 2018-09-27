@@ -1,6 +1,6 @@
 {
     "model" : {
-        "backend":              "Full Yolo",
+        "backend":              "FullYolo",
         "input_size":           200,
         "anchors":              [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
         "max_box_per_image":    10,        
@@ -15,8 +15,8 @@
         "pretrained_weights":   "",
         "batch_size":           16,
         "learning_rate":        1e-4,
-        "nb_epochs":            10,
-        "warmup_epochs":        5,
+        "nb_epochs":            1,
+        "warmup_epochs":        0,
 
         "object_scale":         5.0 ,
         "no_object_scale":      1.0,

@@ -21,6 +21,7 @@ notebooks/Scratch.ipynb
 *swp
 *swo
 
-# weights
+# model directories
 model_weights/
+train_info/
 
