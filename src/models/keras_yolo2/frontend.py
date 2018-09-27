@@ -1,5 +1,6 @@
 from keras.models import Model
-from keras.layers import Reshape, Activation, Conv2D, Input, MaxPooling2D, BatchNormalization, Flatten, Dense, Lambda
+from keras.layers import Reshape, Activation, Conv2D, Input, MaxPooling2D
+from keras.layers import BatchNormalization, Flatten, Dense, Lambda
 from keras.layers.advanced_activations import LeakyReLU
 import tensorflow as tf
 import numpy as np
@@ -11,7 +12,8 @@ from keras.layers.merge import concatenate
 from keras.optimizers import SGD, Adam, RMSprop
 from preprocessing import BatchGenerator
 from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
-from backend import TinyYoloFeature, FullYoloFeature, MobileNetFeature, SqueezeNetFeature, Inception3Feature, VGG16Feature, ResNet50Feature
+from backend import TinyYoloFeature, FullYoloFeature
+
 
 class YOLO(object):
     def __init__(self, backend,
@@ -38,24 +40,13 @@ class YOLO(object):
         input_image     = Input(shape=(self.input_size, self.input_size, 3))
         self.true_boxes = Input(shape=(1, 1, 1, max_box_per_image , 4))  
 
-        if backend == 'Inception3':
-            self.feature_extractor = Inception3Feature(self.input_size)  
-        elif backend == 'SqueezeNet':
-            self.feature_extractor = SqueezeNetFeature(self.input_size)        
-        elif backend == 'MobileNet':
-            self.feature_extractor = MobileNetFeature(self.input_size)
-        elif backend == 'Full Yolo':
+        if backend == 'Full Yolo':
             self.feature_extractor = FullYoloFeature(self.input_size)
         elif backend == 'Tiny Yolo':
             self.feature_extractor = TinyYoloFeature(self.input_size)
-        elif backend == 'VGG16':
-            self.feature_extractor = VGG16Feature(self.input_size)
-        elif backend == 'ResNet50':
-            self.feature_extractor = ResNet50Feature(self.input_size)
         else:
-            raise Exception('Architecture not supported! Only support Full Yolo, Tiny Yolo, MobileNet, SqueezeNet, VGG16, ResNet50, and Inception3 at the moment!')
+            raise Exception('Architecture not supported! Only support Full Yolo, Tiny Yoloat the moment!')
 
-        print(self.feature_extractor.get_output_shape())    
         self.grid_h, self.grid_w = self.feature_extractor.get_output_shape()        
         features = self.feature_extractor.extract(input_image)            
 

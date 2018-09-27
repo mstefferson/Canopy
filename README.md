@@ -66,6 +66,11 @@ docker image build -t mstefferson/tree_bot:latest .
 - If credentials are needed, use environment variables or HashiCorp's [Vault](https://www.vaultproject.io/)
 
 
+## Train
+```
+python src/models/keras_yolo2/train.py -c configs/config_yolo.json
+```
+
 ## Test
 - Include instructions for how to run all tests after the software is installed
 ```
@@ -76,6 +81,9 @@ docker image build -t mstefferson/tree_bot:latest .
 ```
 
 ## Run Inference
+```
+python src/models/keras_yolo2/predict.py -c configs/config_yolo.json -w model_weights/full_yolo_tree.h5 -b true -d true -i data/processed/test/images/image_07.jpg 
+```
 - Include instructions on how to run inference
 - i.e. image classification on a single image for a CNN deep learning project
 ```

@@ -2,10 +2,12 @@
 
 import argparse
 import os
+import sys
 import numpy as np
-from src.models.keras-yolo2.preprocessing import parse_annotation
-from src.models.keras-yolo2.frontend import YOLO
 import json
+sys.path.append(os.getcwd())
+from src.models.keras_yolo2.preprocessing import parse_annotation
+from src.models.keras_yolo2.frontend import YOLO
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -31,7 +33,7 @@ def _main_(args):
 
     # parse annotations of the training set
     train_imgs, train_labels = (
-        parse_annotation(config['train']['train_annot_folder']
+        parse_annotation(config['train']['train_annot_folder'],
                          config['train']['train_image_folder'],
                          config['model']['labels']))
 
@@ -40,7 +42,7 @@ def _main_(args):
     if os.path.exists(config['valid']['valid_annot_folder']):
         valid_imgs, valid_labels = (
             parse_annotation(config['valid']['valid_annot_folder'],
-                             config['valid']['valid_image_folder']
+                             config['valid']['valid_image_folder'],
                              config['model']['labels']))
     else:
         train_valid_split = int(0.8*len(train_imgs))
