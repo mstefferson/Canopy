@@ -2,6 +2,7 @@
 """
 
 import csv
+import os
 from PIL import Image, ImageDraw
 
 import utils
@@ -141,7 +142,8 @@ def load_data(annotations_file, max_images=100):
 
 
 if __name__ == '__main__':
-    ds = load_data('/hdd/datasets/dstl/annotations.csv')
+    data_path =  os.getcwd() + "/data/raw/dstl/annotations/"
+    ds = load_data(data_path + 'annotations.csv')
 
     for data in ds:
         if 'trees' in data.has_labels():

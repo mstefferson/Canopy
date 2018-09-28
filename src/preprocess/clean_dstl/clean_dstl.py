@@ -184,8 +184,9 @@ class DSTLImage:
 
         else:
             # There were no files in that json directory
+            print(json_dir)
             if not features:
-                print(f"No files in {json_dir} found")
+                print("No files in {} found".format(json_dir))
 
         return features
 
@@ -340,6 +341,7 @@ def __transform_and_collect_features(dstl_image, stride, blocks_shape):
     # get the x, y, stride, ignore color channel it should be 3
     ystride, xstride, _ = stride
     base_id = dstl_image.image_id
+    print(blocks_shape)
     jmx, imx, *_ = blocks_shape
 
     # temp sanity check
@@ -555,21 +557,17 @@ def view_dstl_image(image_path, grid_sizes, geojson_dir):
 
 
 if __name__ == '__main__':
-    geojson_dir = "/hdd/datasets/dstl/train_geojson_v3/"
-    grid_file = "/hdd/datasets/dstl/grid_sizes.csv"
+    # set paths
+    data_path =  os.getcwd() + "/data/raw/dstl/"
+    geojson_dir = data_path + "train_geojson_v3/"
+    grid_file = data_path + "grid_sizes.csv"
     grid_sizes = import_grid_sizes(grid_file)
 
     process_dstl_directory(
-        dir_path='/hdd/datasets/dstl/three_band/',
+        dir_path= data_path + 'three_band/',
         sub_dirs=['6010'],
-        image_save_dir='/hdd/datasets/dstl/chopped_images',
-        annotations_save_dir='/hdd/datasets/dstl/',
+        image_save_dir=data_path + 'chopped_images',
+        annotations_save_dir= data_path + 'annotations',
         geojson_dir=geojson_dir,
         grid_sizes=grid_sizes
     )
-
-    # view_dstl_image(
-    #     image_path="/hdd/datasets/dstl/three_band/6010_4_4.tif",
-    #     grid_sizes=grid_sizes,
-    #     geojson_dir=geojson_dir
-    # )
