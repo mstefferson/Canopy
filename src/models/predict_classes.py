@@ -4,6 +4,60 @@ import src.analyze_model
 import src.models
 import src.satellite_analyze
 
+class PredImg:
+    def __init__(self, imag_str, pix_scale=255, origin_r=0, origins_c=0):
+        # paths
+        self.imag_path = imag_str
+        self.save_path = './results/'
+        if not os.path.exists(self.save_path):
+            os.makedirs(self.save_path)
+        # read in image
+        self.image = cv2.imread(image_path)
+        self.image /= scale
+        # set geometry
+        self.pix_scale = pix_scale
+        self.width = imag.shape[1]
+        self.height = imag.shape[0]
+        self.geo_scale = [self.width, self.height]
+        self.origin = [origin_r, origin_c]
+        # labels
+        self.num_labels = 1
+
+    def write2file(self, data, fileid):
+        filename = self.image_path + fileid 
+        f = open(, 'w+')
+        for line in data:
+            f.write(str(line) + '\n')
+
+    def writelocalbox2file(self):
+        self.write2file(self.boxes, 'bb_local.txt')
+
+    def writeglobalbox2file(self):
+        self.write2file(self.boxes_global, 'bb_global.txt')
+
+
+
+    def pred_boxes(self):
+        self.boxes = np.empty([0, 4])
+        self.confidence = np.empty([0,])
+        self.labels = np.empty([0,])
+        
+    def boxes_in_orig(self):
+        self.boxes_global = np.ones_like(self.boxes)
+        # scale boxes to row columns (and relative to origin)
+        self.boxes_global[:, 0] = (self.boxes[:, 0] * self.scale[0]) + self.origin[0]
+        self.boxes_global[:, 1] = (self.boxes[:, 1] * self.scale[1]) + self.origin[1]
+        self.boxes_global[:, 2] = (self.boxes[:, 2] * self.scale[0])
+        self.boxes_global[:, 3] = (self.boxes[:, 3] * self.scale[1]])
+
+
+class PredImgRandom(PredImg):
+    def pred_boxes(self):
+        num_objects = np.random.randint(3)+1
+        self.boxes = np.random.rand(num_objects, 4)
+        self.confidence = np.random.rand(num_objects,)
+        self.labels = np.random.choice(self.num_labels, num_objects)
+
 
 def divide_tiff(sat_w, sat_h, image_w=200, image_h=200):
     # imagesize = [height, width]
@@ -24,26 +78,6 @@ def divide_tiff(sat_w, sat_h, image_w=200, image_h=200):
     return row_origins, col_origins
 
 
-def pred_subset(sat_data, r_start, r_end, c_start, c_end,
-                model='none', c_channels=[0, 1, 3]):
-    # check to make sure it's not zero
-    delta_r = r_end - r_start
-    delta_c = c_end - c_start
-    zero_compare = np.zeros((delta_r, delta_c, 3))
-    # get band data
-    band_data = src.satellite_analyze.get_satellite_subset(
-        sat_data, r_start, r_end, c_start, c_end)
-    band_data = band_data[:, :, c_channels]
-    if np.all(band_data != zero_compare):
-        # try and build an output for the tree data
-        if model == 'pixel_detect':
-            out_pred = src.models.pixel_detect_model(data)
-        else:
-            out_pred = None
-    else:
-        out_pred = None
-    return out_pred
-
 
 def pred_subset(sat_data, r_start, r_end, c_start, c_end,
                 model='none', c_channels=[0, 1, 3]):
@@ -60,6 +94,19 @@ def pred_subset(sat_data, r_start, r_end, c_start, c_end,
     else:
         predictions = None
     return predictions
+
+
+def predict(model, data):
+    # get boxes 
+    box_list, bboxes = predict_bounding_box(yolo, image, config['model']['labels'])
+    if write_file:
+        f = open('results.txt', 'w+')
+        for box in box_list:
+            f.write(str(box) + '\n')
+    if  save_detect:
+        image = draw_boxes(image, bboxes, config['model']['labels'])
+        filename = image_path[:-4] + '_detected' + image_path[-4:]
+        cv2.imwrite(filename, image)
 
 
 def pred_tiff(sat_file,  r_start=0,
