@@ -1,31 +1,34 @@
+import os
+import imageio
 import numpy as np
 import rasterio
-import src.analyze_model
-import src.models
+import src.models.analyze_model
 import src.satellite_analyze
 
-class PredImg:
-    def __init__(self, imag_str, pix_scale=255, origin_r=0, origins_c=0):
+
+class PredImg():
+    def __init__(self, imag_str, pix_scale=255., origin_r=0, origin_c=0):
         # paths
         self.imag_path = imag_str
         self.save_path = './results/'
         if not os.path.exists(self.save_path):
             os.makedirs(self.save_path)
         # read in image
-        self.image = cv2.imread(image_path)
-        self.image /= scale
+        self.image = imageio.imread(self.imag_path)
+        self.image = self.image / pix_scale
         # set geometry
         self.pix_scale = pix_scale
-        self.width = imag.shape[1]
-        self.height = imag.shape[0]
+        self.width = np.shape(self.image)[1]
+        self.height = np.shape(self.image)[0]
+        self.channels = np.shape(self.image)[2]
         self.geo_scale = [self.width, self.height]
         self.origin = [origin_r, origin_c]
         # labels
         self.num_labels = 1
 
     def write2file(self, data, fileid):
-        filename = self.image_path + fileid 
-        f = open(, 'w+')
+        filename = self.image_path + fileid
+        f = open(filename, 'w+')
         for line in data:
             f.write(str(line) + '\n')
 
@@ -35,23 +38,27 @@ class PredImg:
     def writeglobalbox2file(self):
         self.write2file(self.boxes_global, 'bb_global.txt')
 
-
-
     def pred_boxes(self):
         self.boxes = np.empty([0, 4])
-        self.confidence = np.empty([0,])
-        self.labels = np.empty([0,])
-        
+        self.confidence = np.empty([0, ])
+        self.labels = np.empty([0, ])
+
     def boxes_in_orig(self):
         self.boxes_global = np.ones_like(self.boxes)
         # scale boxes to row columns (and relative to origin)
-        self.boxes_global[:, 0] = (self.boxes[:, 0] * self.scale[0]) + self.origin[0]
-        self.boxes_global[:, 1] = (self.boxes[:, 1] * self.scale[1]) + self.origin[1]
+        self.boxes_global[:, 0] = (
+            (self.boxes[:, 0] * self.scale[0]) + self.origin[0])
+        self.boxes_global[:, 1] = (
+            (self.boxes[:, 1] * self.scale[1]) + self.origin[1])
         self.boxes_global[:, 2] = (self.boxes[:, 2] * self.scale[0])
-        self.boxes_global[:, 3] = (self.boxes[:, 3] * self.scale[1]])
+        self.boxes_global[:, 3] = (self.boxes[:, 3] * self.scale[1])
 
 
 class PredImgRandom(PredImg):
+    def __init__(self, imag_str, pix_scale=255., origin_r=0, origin_c=0):
+        PredImg.__init__(self, imag_str, pix_scale=pix_scale,
+                         origin_r=origin_r, origin_c=origin_c)
+
     def pred_boxes(self):
         num_objects = np.random.randint(3)+1
         self.boxes = np.random.rand(num_objects, 4)
