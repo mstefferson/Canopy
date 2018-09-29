@@ -31,27 +31,27 @@ import data_utils
 
 
 MAP_TO_LOCAL_LABELS = {
-    'LARGE_BUILDING': 'buildings',
-    'RESIDENTIAL_BUILDING': 'buildings',
-    'NON_RESIDENTIAL_BUILDING': 'buildings',
-    'MISC_SMALL_MANMADE_STRUCTURE': 'buildings',
+    'LARGE_BUILDING': None,
+    'RESIDENTIAL_BUILDING': None,
+    'NON_RESIDENTIAL_BUILDING': None,
+    'MISC_SMALL_MANMADE_STRUCTURE': None,
     'GOOD_ROADS': None,
     'POOR_DIRT_CART_TRACK': None,
     'FOOTPATH_TRAIL': None,
     'WOODLAND': None,
     'HEDGEROWS': None,
-    'GROUP_TREES': None,
+    'GROUP_TREES': 'trees',
     'STANDALONE_TREES': 'trees',
     'CONTOUR_PLOUGHING_CROPLAND': None,
     'SCRUBLAND': None,
     'ROW_CROP': None,
     'DEMARCATED_NON_CROP_FIELD': None,
-    'FARM_ANIMALS_IN_FIELD': 'animals',
+    'FARM_ANIMALS_IN_FIELD': None,
     'WATERWAY': None,
     'STANDING_WATER': None,
-    'LARGE_VEHICLE': 'vehicle',
-    'SMALL_VEHICLE': 'vehicle',
-    'MOTORBIKE': 'vehicle'
+    'LARGE_VEHICLE': None,
+    'SMALL_VEHICLE': None,
+    'MOTORBIKE': None
 }
 
 
@@ -562,24 +562,28 @@ def view_dstl_image(image_path, grid_sizes, geojson_dir):
 if __name__ == '__main__':
     # parse inputs
     parser = argparse.ArgumentParser()
-    parser.add_argument('sat_file', 
-                        '-b',
-                        '--block',
-                        help='block size of chopped image')
+    # parse args
+    parser = argparse.ArgumentParser()
+    parser.add_argument('config',
+                        help='config file')
     args = parser.parse_args()
+    config_path = parser.config
+    # load config
+    with open(config_path) as config_buffer:
+        config = json.loads(config_buffer.read())
     # set paths
-    data_path =  os.getcwd() + "/data/raw/dstl/"
-    save_path =  os.getcwd() + "/data/processed/dstl/"
+    data_path = os.getcwd() + config["dstl"]["raw_data_rel"]
+    save_path = os.getcwd() + config["dstl"]["raw_data_rel"]    
     geojson_dir = data_path + "train_geojson_v3/"
     grid_file = data_path + "grid_sizes.csv"
     grid_sizes = import_grid_sizes(grid_file)
 
     # process the images
     process_dstl_directory(
-        dir_path= data_path + 'three_band/',
+        dir_path=data_path + 'three_band/',
         sub_dirs=['6010'],
         image_save_dir=save_path + 'chopped_images',
-        annotations_save_dir= save_path + 'annotations',
+        annotations_save_dir=save_path + 'annotations',
         geojson_dir=geojson_dir,
         grid_sizes=grid_sizes
         blocks_shape=(args.block, args.block,3)
