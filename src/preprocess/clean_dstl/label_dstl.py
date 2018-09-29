@@ -50,13 +50,14 @@ if __name__ == '__main__':
     df['x'] = x_center
     df['y'] = y_center
     for f_name in all_files:
+        # convert png name to a txt file for yolo label
         data_temp = df.loc[df['file'] == f_name]
         f_name_list = f_name.split('/')
         f_name_local_lab = f_name_list[-1][:-4]+'.txt'
         f_name_lab =  '/'.join(f_name_list[:-2]) + '/yolo_labels/' + f_name_local_lab
-        f = open(f_name_lab, 'w+')
-        for index, row in data_temp.iterrows():
-            str2dump = str([row['label'], row['x'],
-                            row['y'], row['w'], row['h']])
-            f.write(str2dump + '\n')
+        with open(f_name_lab, 'w+') as f:
+            for index, row in data_temp.iterrows():
+                str2dump = str([row['label'], row['x'],
+                                row['y'], row['w'], row['h']])
+                f.write(str2dump + '\n')
         break
