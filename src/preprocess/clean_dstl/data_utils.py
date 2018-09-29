@@ -1,4 +1,7 @@
 """Base functions used to handle raw data being loaded, cleaned, and resaved
+
+Code written by Ben Hammel (https://github.com/bdhammel/faraway-farms)
+and used with permission
 """
 import numpy as np
 from PIL import Image, ImageDraw

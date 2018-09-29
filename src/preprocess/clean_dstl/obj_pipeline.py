@@ -1,4 +1,7 @@
 """Functions specific to handling cleaned data for the Object detection model
+
+Code written by Ben Hammel (https://github.com/bdhammel/faraway-farms)
+and used with permission
 """
 
 import csv
@@ -142,7 +145,7 @@ def load_data(annotations_file, max_images=100):
 
 
 if __name__ == '__main__':
-    data_path =  os.getcwd() + "/data/raw/dstl/annotations/"
+    data_path =  os.getcwd() + "/data/processed/dstl/annotations/"
     ds = load_data(data_path + 'annotations.csv')
 
     for data in ds:

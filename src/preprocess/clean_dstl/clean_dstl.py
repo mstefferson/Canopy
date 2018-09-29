@@ -12,6 +12,8 @@ References
 ----------
 (*) https://www.kaggle.com/c/dstl-satellite-imagery-feature-detection
 
+Code written by Ben Hammel (https://github.com/bdhammel/faraway-farms)
+and used with permission
 """
 import matplotlib.pyplot as plt
 from matplotlib import patches
@@ -428,7 +430,8 @@ def process_dstl_directory(dir_path,
                            image_save_dir,
                            annotations_save_dir,
                            geojson_dir,
-                           grid_sizes):
+                           grid_sizes,
+                           blocks_shape=(300, 300, 3)):
     """For a directory of DSTL images, import and process into acceptable model
     format
 
@@ -458,7 +461,7 @@ def process_dstl_directory(dir_path,
 
         csvwriter = csv.writer(csv_file)
         processor = dstl_processor(
-            block_shape=(300, 300, 3),
+            block_shape=block_shape,
             image_save_dir=image_save_dir,
             annotation_writer=csvwriter
         )
@@ -557,17 +560,27 @@ def view_dstl_image(image_path, grid_sizes, geojson_dir):
 
 
 if __name__ == '__main__':
+    # parse inputs
+    parser = argparse.ArgumentParser()
+    parser.add_argument('sat_file', 
+                        '-b',
+                        '--block',
+                        help='block size of chopped image')
+    args = parser.parse_args()
     # set paths
     data_path =  os.getcwd() + "/data/raw/dstl/"
+    save_path =  os.getcwd() + "/data/processed/dstl/"
     geojson_dir = data_path + "train_geojson_v3/"
     grid_file = data_path + "grid_sizes.csv"
     grid_sizes = import_grid_sizes(grid_file)
 
+    # process the images
     process_dstl_directory(
         dir_path= data_path + 'three_band/',
         sub_dirs=['6010'],
-        image_save_dir=data_path + 'chopped_images',
-        annotations_save_dir= data_path + 'annotations',
+        image_save_dir=save_path + 'chopped_images',
+        annotations_save_dir= save_path + 'annotations',
         geojson_dir=geojson_dir,
         grid_sizes=grid_sizes
+        blocks_shape=(args.block, args.block,3)
     )

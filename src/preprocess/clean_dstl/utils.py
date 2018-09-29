@@ -1,4 +1,8 @@
 """Base functions used to handle clean data before it's feed into a model
+
+Code written by Ben Hammel (https://github.com/bdhammel/faraway-farms)
+and used with permission
+
 """
 import numpy as np
 from skimage.util import view_as_blocks
