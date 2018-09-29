@@ -1,5 +1,6 @@
-"""This script handles pulling in the data from the kaggle competition from DSTL,
-cleaning it, and saving it in a format that's appropriate to be read in by the
+"""This script handles pulling in the data from the kaggle competition
+from DSTL, cleaning it, and saving it in a format that's
+appropriate to be read in by the
 keras-retinanet model
 
 
@@ -587,5 +588,5 @@ if __name__ == '__main__':
         annotations_save_dir=save_path + 'annotations',
         geojson_dir=geojson_dir,
         grid_sizes=grid_sizes
-        blocks_shape=(config["dstl"]["image_h"], config["dstl"]["image_w"], 3)
+        blocks_shape=(config["dstl"]["imag_h"], config["dstl"]["imag_w"], 3)
     )

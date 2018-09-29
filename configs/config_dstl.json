@@ -1,7 +1,7 @@
 {
     "dstl" : {
-        "image_w": 300,
-        "image_h": 300,
+        "imag_w": 300,
+        "imag_h": 300,
         "raw_data_rel": "/data/raw/dstl/",
         "proc_data_rel": "/data/processed/dstl/",
         "sub_dirs": ["6010"]
