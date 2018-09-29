@@ -1,6 +1,8 @@
 import pandas as pd
 import os
 import numpy as np
+import argparse
+import json
 
 if __name__ == '__main__':
     # parse args
@@ -8,14 +10,17 @@ if __name__ == '__main__':
     parser.add_argument('config',
                         help='config file')
     args = parser.parse_args()
-    config_path = parser.config
+    config_path = args.config
+    print(os.getcwd())
     # load config
     with open(config_path) as config_buffer:
-        config = json.loads(config_buffer.read())
-    df = pd.read_csv('annotations.csv', header=None)
-    df.columns = ['file', 'x_min', 'y_min', 'x_max', 'y_max', 'label_str']
+        # config = json.loads(config_buffer.read())
+        config = json.load(config_buffer)
+    # get file
     ann_file = (os.getcwd() + config['dstl']['proc_data_rel'] +
                 "annotations/annotations.csv")
+    df = pd.read_csv(ann_file, header=None)
+    df.columns = ['file', 'x_min', 'y_min', 'x_max', 'y_max', 'label_str']
     label_path = os.getcwd() + config['dstl']['proc_data_rel'] + "/yolo_labels"
     # make dir
     if not os.path.exists(label_path):
@@ -31,8 +36,8 @@ if __name__ == '__main__':
     all_files = pd.unique(df['file'])
     # set all the labels, after rerunning set just to trees
     label_dir = {'trees': 0, 'buildings': 1, 'animals': 2}
-    df['labels'] = df.label_str.apply(lambda x: label_dir[x]).astype('int')
-    df['labels'] = df['labels'].astype('int')
+    df['label'] = df.label_str.apply(lambda x: label_dir[x]).astype('int')
+    df['label'] = df['label'].astype('int')
     # get width and height
     w = df['x_max'] - df['x_min']
     h = df['y_max'] - df['y_min']
@@ -45,13 +50,13 @@ if __name__ == '__main__':
     df['x'] = x_center
     df['y'] = y_center
     for f_name in all_files:
-        data_temp = df.loc[df['file'] == file]
-        f = open(f_name, 'w+')
+        data_temp = df.loc[df['file'] == f_name]
+        f_name_list = f_name.split('/')
+        f_name_local_lab = f_name_list[-1][:-4]+'.txt'
+        f_name_lab =  '/'.join(f_name_list[:-2]) + '/yolo_labels/' + f_name_local_lab
+        f = open(f_name_lab, 'w+')
         for index, row in data_temp.iterrows():
             str2dump = str([row['label'], row['x'],
                             row['y'], row['w'], row['h']])
             f.write(str2dump + '\n')
-        f.close()
-        print(f_name)
-        print(data_2_dump)
-    break
+        break

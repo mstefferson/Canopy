@@ -25,7 +25,8 @@ import geojson
 import pandas as pd
 import os
 import csv
-
+import argparse
+import json
 import utils
 import data_utils
 
@@ -567,10 +568,10 @@ if __name__ == '__main__':
     parser.add_argument('config',
                         help='config file')
     args = parser.parse_args()
-    config_path = parser.config
+    config_path = args.config
     # load config
     with open(config_path) as config_buffer:
-        config = json.loads(config_buffer.read())
+        config = json.load(config_buffer)
     # set paths
     data_path = os.getcwd() + config["dstl"]["raw_data_rel"]
     save_path = os.getcwd() + config["dstl"]["raw_data_rel"]    
@@ -581,10 +582,10 @@ if __name__ == '__main__':
     # process the images
     process_dstl_directory(
         dir_path=data_path + 'three_band/',
-        sub_dirs=['6010'],
+        sub_dirs=config["dstl"]["sub_dirs"],
         image_save_dir=save_path + 'chopped_images',
         annotations_save_dir=save_path + 'annotations',
         geojson_dir=geojson_dir,
         grid_sizes=grid_sizes
-        blocks_shape=(args.block, args.block,3)
+        blocks_shape=(config["dstl"]["image_h"], config["dstl"]["image_w"], 3)
     )

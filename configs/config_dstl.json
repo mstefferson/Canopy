@@ -4,8 +4,7 @@
         "image_h": 300,
         "raw_data_rel": "/data/raw/dstl/",
         "proc_data_rel": "/data/processed/dstl/",
-        "sub_dirs": ["6010"],
-        "sub_dirs": ['6010']
+        "sub_dirs": ["6010"]
     }
 }
 
