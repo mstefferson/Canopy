@@ -14,7 +14,7 @@ References
 (*) https://www.kaggle.com/c/dstl-satellite-imagery-feature-detection
 
 Credit: Code written by Ben Hammel (https://github.com/bdhammel/faraway-farms)
-and used with permission
+and used with permission. I have made slight edits to paths and added a main
 """
 import matplotlib.pyplot as plt
 from matplotlib import patches
@@ -561,24 +561,26 @@ def view_dstl_image(image_path, grid_sizes, geojson_dir):
     img.show(labels=['trees'], as_bbox=False)
 
 
-if __name__ == '__main__':
-    # parse inputs
-    parser = argparse.ArgumentParser()
-    # parse args
-    parser = argparse.ArgumentParser()
-    parser.add_argument('config',
-                        help='config file')
-    args = parser.parse_args()
-    config_path = args.config
-    # load config
-    with open(config_path) as config_buffer:
-        config = json.load(config_buffer)
+def main(config):
+    '''
+    Chops up and build annotations for the dstl data set
+    Args:
+        config (dist): loaded dstl config json. Contains image and path info
+    Returns:
+        N/A
+    Update:
+        N/A
+    Writes to file:
+        Writes /path/2/processed/data/chopped_data/ and 
+            /path/2/processed/data/chopped_data/
+    '''
     # set paths
     data_path = os.getcwd() + config["dstl"]["raw_data_rel"]
     save_path = os.getcwd() + config["dstl"]["proc_data_rel"]    
     geojson_dir = data_path + "train_geojson_v3/"
     grid_file = data_path + "grid_sizes.csv"
     grid_sizes = import_grid_sizes(grid_file)
+
 
     # process the images
     process_dstl_directory(
@@ -590,3 +592,24 @@ if __name__ == '__main__':
         grid_sizes=grid_sizes,
         block_shape=(config["dstl"]["imag_h"], config["dstl"]["imag_w"], 3)
     )
+
+
+if __name__ == '__main__':
+    '''
+    Executeable:
+    python3 src/preprocess/clean_dstl/clean_dstl.py /
+        configs/config_dstl.json
+    '''
+    # parse inputs
+    parser = argparse.ArgumentParser()
+    # parse args
+    parser = argparse.ArgumentParser()
+    parser.add_argument('config',
+                        help='config file')
+    args = parser.parse_args()
+    config_path = args.config
+    # load config
+    with open(config_path) as config_buffer:
+        config = json.load(config_buffer)
+    # run main
+    main(config)

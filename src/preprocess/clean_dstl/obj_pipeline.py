@@ -1,4 +1,5 @@
-"""Functions specific to handling cleaned data for the Object detection model
+"""Functions specific to handling cleaned data for the Object detection model.
+Used to visualize labels.
 
 Code written by Ben Hammel (https://github.com/bdhammel/faraway-farms)
 and used with permission

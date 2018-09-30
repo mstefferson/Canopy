@@ -12,14 +12,22 @@ from lxml import etree
 
 def write_voc_file(fname, labels, coords, img_width, img_height):
     """
-    Definition: Writes label into VOC (XML) format.
-    Parameters: fname - full file path to label file
-                labels - list of objects in file
-                coords - list of position of objects in file
-                img_width - width of image
-                img_height - height of image
-    Returns: annotation - XML tree for image file
-    Credit: eweill/convert-datasets
+    Writes label into VOC (XML) format.
+
+    Args:
+        fname - full file path to label file
+        labels - list of objects in file
+        coords - list of position of objects in file
+        img_width - width of image
+        img_height - height of image
+    Returns: 
+        annotation - XML tree for image file
+    Updates:
+        N/A
+    Writes to file:
+        N/A
+    Credit: 
+        eweill/convert-datasets
     """
     annotation = etree.Element('annotation')
     filename = etree.Element('filename')
@@ -72,18 +80,36 @@ def write_voc_file(fname, labels, coords, img_width, img_height):
     width = etree.Element('width')
     width.text = str(img_width)
     img_size.append(width)
-
     return annotation
 
 
-def get_all_bounding(config):
+def get_all_bounding(process_path, imag_w, imag_h):
+    '''
+    Gets all of the bounding box informations for the annotations
+        file built from clean_dstl
+
+    Args:
+        process_path (str): Path to processed data (parent of chopped images 
+            and annotations file). This should be the processed data path 
+            in config
+        imag_w (int): Chopped image width
+        imag_h (int): Chopped image height
+    Returns:
+        df (pd.Dataframe): Dataframe with the bounding box info
+            for all of the chopped images (from clean_dstl)
+        files2delete (list): List all the unlabeled chopped images
+    Updates:
+        N/A
+    Writes to file:
+        N/A
+    '''
     # get file
-    ann_file = (os.getcwd() + config['dstl']['proc_data_rel'] +
+    ann_file = (os.getcwd() + process_path +
                 "annotations.csv")
     df = pd.read_csv(ann_file, header=None)
     df.columns = ['file', 'x_min', 'y_min', 'x_max', 'y_max', 'label_str']
-    label_path = os.getcwd() + config['dstl']['proc_data_rel'] + "/labels"
-    image_path = os.getcwd() + config['dstl']['proc_data_rel'] + "/images"
+    label_path = os.getcwd() + process_path + "/labels"
+    image_path = os.getcwd() + process_path + "/images"
     # make dir
     if not os.path.exists(label_path):
         os.makedirs(label_path)
@@ -103,8 +129,8 @@ def get_all_bounding(config):
     # get width and height
     w = df['x_max'] - df['x_min']
     h = df['y_max'] - df['y_min']
-    width_image = config['dstl']['imag_w']
-    height_image = config['dstl']['imag_w']
+    width_image = imag_w
+    height_image = imag_h
     # convert to x, y, w, h (scaled)
     x_center = (df['x_min'] + w / 2) / width_image
     y_center = (df['y_min'] + h / 2) / height_image
@@ -116,6 +142,27 @@ def get_all_bounding(config):
 
 
 def build_labels(df, files2delete, imag_w, imag_h, lab_format='voc'):
+    '''
+    Given a df, builds image and label directories for the images
+        with labels and deletes the unused ones.
+    
+    Args:
+        df (pd.Dataframe): Dataframe of the annotations from clean_dstl.
+            Contains path info and labels for each images in dstl.
+        files2delete (list of strs): List of the full path of unlabeled
+            data that will be deleted
+        imag_w (int): Chopped image width
+        imag_h (int): Chopped image height
+        lab_format (str): Label format. Accepts 'voc'/'yolo'
+    Returns:
+        N/A
+    Updates:
+        N/A
+    Writes to file:
+        Deletes unlabeled images and moves labeled images from
+        /base/path/data/processed/chopped_images to 
+        /base/path/data/processed/(images, labels)
+    '''
     # clean all unusable files
     print('Deleting {} files'.format(len(np.unique(files2delete))))
     for f_name in files2delete:
@@ -179,6 +226,22 @@ def build_labels(df, files2delete, imag_w, imag_h, lab_format='voc'):
 
 
 def build_val_train(path2data, val_size=0.3):
+    '''
+    Splits the images/labels from an input path to a train and validation
+    set
+
+    Args:
+        path2data (str): base path to the images and labels (e.g.,
+            /path2data/images, /path2data/labels
+        val_size (float, optional): validation set fraction
+    Returns:
+        N/A
+    Updates:
+        N/A
+    Writes to file:
+        Removes /path2data/(images, labels) and writes 
+            /path2data/(train, val)/(images, labels)
+    '''
     # set up paths
     image_path = path2data + 'images/'
     label_path = path2data + 'labels/'
@@ -235,8 +298,46 @@ def build_val_train(path2data, val_size=0.3):
         print('No data to move to train/val')
 
 
+def main(config):
+    '''
+    After cleaning the dstl data, i.e. building annotations and chopping up
+        the files by running clean_dstl, this function will build a nice
+        labeled traning and validation set with the appropriate labeling
+        format
+    Args:
+        config (dist): loaded dstl config json. Contains image and path info
+    Returns:
+        N/A
+    Update:
+        N/A
+    Writes to file:
+        Removes /path2data/chopped_images and writes
+            /path2data/(train, val)/(images, labels)
+    '''
+    # get all the bound box labels
+    df, files2delete = get_all_bounding(config['dstl']['proc_data_rel'],
+                                        config['dstl']['imag_w'],
+                                        config['dstl']['imag_h'])
+    print('Got all bounding boxes')
+    # get all the bound box labels
+    build_labels(df, files2delete, config['dstl']['imag_w'],
+                 config['dstl']['imag_h'],
+                 lab_format=config['dstl']['label_format'])
+    print('Built all labels')
+    # build val/train
+    path2data = os.getcwd() + config['dstl']['proc_data_rel']
+    build_val_train(path2data, val_size=0.3)
+    print('Move to train/val')
+
+
 if __name__ == '__main__':
+    '''
+    Executeable:
+    python3 src/preprocess/clean_dstl/label_dstl.py /
+        configs/config_dstl.json
+    '''
     # parse args
+
     parser = argparse.ArgumentParser()
     parser.add_argument('config',
                         help='config file')
@@ -247,15 +348,5 @@ if __name__ == '__main__':
     with open(config_path) as config_buffer:
         # config = json.loads(config_buffer.read())
         config = json.load(config_buffer)
-
-    # get all the bound box labels
-    df, files2delete = get_all_bounding(config)
-    print('Got all bounding boxes')
-    # get all the bound box labels
-    build_labels(df, files2delete, config['dstl']['imag_w'],
-                 config['dstl']['imag_h'], lab_format='voc')
-    print('Built all labels')
-    # build val/train
-    path2data = os.getcwd() + config['dstl']['proc_data_rel']
-    build_val_train(path2data, val_size=0.3)
-    print('Move to train/val')
+    # run main
+    main(config)

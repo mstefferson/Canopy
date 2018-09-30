@@ -4,6 +4,7 @@
         "imag_h": 300,
         "raw_data_rel": "/data/raw/dstl/",
         "proc_data_rel": "/data/processed/dstl/",
+        "label_format": "voc",
         "sub_dirs": ["6010"]
     }
 }
