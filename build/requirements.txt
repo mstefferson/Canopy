@@ -1,4 +1,4 @@
-pyproj==1.9.5.1
+pyproj==1.9.5
 geopandas==0.4.0
 rasterio==1.0.4
 pytictoc==1.4.0
@@ -6,3 +6,7 @@ scipy==1.1.0
 jupyter==1.0.0
 matplotlib==3.0.0
 imageio==2.4.1
+geojson
+scikit-image
+scikit-learn
+lxml
