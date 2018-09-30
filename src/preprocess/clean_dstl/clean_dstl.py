@@ -13,7 +13,7 @@ References
 ----------
 (*) https://www.kaggle.com/c/dstl-satellite-imagery-feature-detection
 
-Code written by Ben Hammel (https://github.com/bdhammel/faraway-farms)
+Credit: Code written by Ben Hammel (https://github.com/bdhammel/faraway-farms)
 and used with permission
 """
 import matplotlib.pyplot as plt
@@ -433,7 +433,7 @@ def process_dstl_directory(dir_path,
                            annotations_save_dir,
                            geojson_dir,
                            grid_sizes,
-                           blocks_shape=(300, 300, 3)):
+                           block_shape=(300, 300, 3)):
     """For a directory of DSTL images, import and process into acceptable model
     format
 
@@ -575,7 +575,7 @@ if __name__ == '__main__':
         config = json.load(config_buffer)
     # set paths
     data_path = os.getcwd() + config["dstl"]["raw_data_rel"]
-    save_path = os.getcwd() + config["dstl"]["raw_data_rel"]    
+    save_path = os.getcwd() + config["dstl"]["proc_data_rel"]    
     geojson_dir = data_path + "train_geojson_v3/"
     grid_file = data_path + "grid_sizes.csv"
     grid_sizes = import_grid_sizes(grid_file)
@@ -587,6 +587,6 @@ if __name__ == '__main__':
         image_save_dir=save_path + 'chopped_images',
         annotations_save_dir=save_path + 'annotations',
         geojson_dir=geojson_dir,
-        grid_sizes=grid_sizes
-        blocks_shape=(config["dstl"]["imag_h"], config["dstl"]["imag_w"], 3)
+        grid_sizes=grid_sizes,
+        block_shape=(config["dstl"]["imag_h"], config["dstl"]["imag_w"], 3)
     )

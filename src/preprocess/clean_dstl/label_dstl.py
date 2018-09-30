@@ -117,119 +117,124 @@ def get_all_bounding(config):
 
 
 def build_labels(df, files2delete, imag_w, imag_h, lab_format='voc'):
-    # get base directory
-    fullpath = df.iloc[0, 0]
-    base_dir = '/'.join(fullpath.split('/')[:-2])
-    chopped_dir = '/'.join(fullpath.split('/')[:-1])
-    # build outputs
-    for a_dir in [base_dir + '/images/', base_dir + '/labels/']:
-        if not os.path.exists(a_dir):
-            os.makedirs(a_dir)
-
-    # grab files
-    files2use = pd.unique(df['file'])
     # clean all unusable files
     for f_name in files2delete:
-        # print('going to delete', f_name)
-        continue
-    # build labels for usable files
-    counter = 0
-    for f_name in files2use:
-        # convert data for file
-        data_temp = df.loc[df['file'] == f_name]
-        # split up path for conversion
-        f_name_list = f_name.split('/')
-        # get image name
-        f_img = base_dir + '/images/' + f_name_list[-1]
-        # grab labels depending on format
-        if lab_format == 'yolo':
-            f_name_local_lab = f_name_list[-1][:-4]+'.txt'
-            f_lab = base_dir + '/labels/' + f_name_local_lab
-            with open(f_lab, 'w+') as f:
-                for index, row in data_temp.iterrows():
-                    str2dump = str([row['label'], row['x'],
-                                    row['y'], row['w'], row['h']])
-                    f.write(str2dump + '\n')
-        elif lab_format == 'voc':
-            f_name_local_lab = f_name_list[-1][:-4]+'.xml'
-            f_lab = base_dir + '/labels/' + f_name_local_lab
-            with open(f_lab, 'w+') as f:
-                labels = list(data_temp.label_str)
-                coords = np.array(
-                    data_temp.loc[:, ['x_min', 'y_min', 'x_max', 'y_max']])
-                # convert to xml
-                annot2dump = write_voc_file(f_img, labels, coords,
-                                            imag_w, imag_h)
-                et = etree.ElementTree(annot2dump)
-                et.write(f_lab, pretty_print=True)
+        if os.path.exists(f_name):
+            os.remove(f_name)
+    if len(df) > 0:
+        # get base directory
+        fullpath = df.iloc[0, 0]
+        base_dir = '/'.join(fullpath.split('/')[:-2])
+        chopped_dir = '/'.join(fullpath.split('/')[:-1])
+        # build outputs
+        for a_dir in [base_dir + '/images/', base_dir + '/labels/']:
+            if not os.path.exists(a_dir):
+                os.makedirs(a_dir)
+        # grab files
+        files2use = pd.unique(df['file'])
+        # build labels for usable files
+        counter = 0
+        for f_name in files2use:
+            # convert data for file
+            data_temp = df.loc[df['file'] == f_name]
+            # split up path for conversion
+            f_name_list = f_name.split('/')
+            # get image name
+            f_img = base_dir + '/images/' + f_name_list[-1]
+            # grab labels depending on format
+            if lab_format == 'yolo':
+                f_name_local_lab = f_name_list[-1][:-4]+'.txt'
+                f_lab = base_dir + '/labels/' + f_name_local_lab
+                with open(f_lab, 'w+') as f:
+                    for index, row in data_temp.iterrows():
+                        str2dump = str([row['label'], row['x'],
+                                        row['y'], row['w'], row['h']])
+                        f.write(str2dump + '\n')
+            elif lab_format == 'voc':
+                f_name_local_lab = f_name_list[-1][:-4]+'.xml'
+                f_lab = base_dir + '/labels/' + f_name_local_lab
+                with open(f_lab, 'w+') as f:
+                    labels = list(data_temp.label_str)
+                    coords = np.array(
+                        data_temp.loc[:, ['x_min', 'y_min', 'x_max', 'y_max']])
+                    # convert to xml
+                    annot2dump = write_voc_file(f_img, labels, coords,
+                                                imag_w, imag_h)
+                    et = etree.ElementTree(annot2dump)
+                    et.write(f_lab, pretty_print=True)
+            else:
+                error_str = ('Do not recognize label conversion format. ' +
+                             'Must be voc or yolo')
+                raise RuntimeError(error_str)
+            os.rename(f_name, f_img)
+            counter += 1
+        # remove chopped_files directory
+        if not os.listdir(chopped_dir):
+            print('Chopped empty, deleting')
+            os.rmdir(chopped_dir)
         else:
-            error_str = ('Do not recognize label conversion format. ' +
-                         'Must be voc or yolo')
-            raise RuntimeError(error_str)
-        os.rename(f_name, f_img)
-        counter += 1
-        if counter > 10:
-            break
-    # remove chopped_files directory
-    if not os.listdir(chopped_dir):
-        print('Chopped empty, deleting')
-        os.rmdir(chopped_dir)
+            print('Chopped not empty, not deleting')
     else:
-        print('Chopped not empty, not deleting')
+        print('No data')
 
 
 def build_val_train(path2data, val_size=0.3):
     # set up paths
     image_path = path2data + 'images/'
     label_path = path2data + 'labels/'
-    image_path_train = path2data + 'train/images/'
-    label_path_train = path2data + 'train/labels/'
-    image_path_val = path2data + 'val/images/'
-    label_path_val = path2data + 'val/labels/'
-    # make dirs
-    all_dirs =  [image_path_train, label_path_train,
-                 image_path_val, label_path_val]
-    for a_dir in all_dirs:
-        if not os.path.exists(a_dir):
-            os.makedirs(a_dir)
-    # grab all files
-    all_images = [f for f in os.listdir(image_path)
-                  if os.path.isfile(os.path.join(image_path, f))]
-    all_labels = [f for f in os.listdir(label_path)
-                  if os.path.isfile(os.path.join(label_path, f))]
-    # verify the lengths are the same (should compare sets)
-    if len(all_images) != len(all_labels):
-        raise RuntimeError('Images/label mismatch!')
-    # get all the files
-    num_files = len(all_images)
-    num_valid = int(num_files * 0.3)
-    num_train = num_files - num_valid
-    # get all indices and shuffle them
-    all_ids = np.arange(num_files)
-    np.random.shuffle(all_ids)
-    train_ids = all_ids[1:num_train]
-    val_ids = all_ids[num_train:]
-    # move all files
-    for ind in all_ids:
-        # train
-        if ind <= num_train:
-            os.rename(image_path+all_images[ind],
-                      image_path_train+all_images[ind])
-            os.rename(label_path+all_labels[ind],
-                      label_path_train+all_labels[ind])
-        # val
+    if os.path.exists(image_path) and os.path.exists(label_path):
+        image_path_train = path2data + 'train/images/'
+        label_path_train = path2data + 'train/labels/'
+        image_path_val = path2data + 'val/images/'
+        label_path_val = path2data + 'val/labels/'
+        # make dirs
+        all_dirs =  [image_path_train, label_path_train,
+                     image_path_val, label_path_val]
+        for a_dir in all_dirs:
+            if not os.path.exists(a_dir):
+                os.makedirs(a_dir)
+        # grab all files
+        all_images = [f for f in os.listdir(image_path)
+                      if os.path.isfile(os.path.join(image_path, f))]
+        all_labels = [f for f in os.listdir(label_path)
+                      if os.path.isfile(os.path.join(label_path, f))]
+        # verify the lengths are the same (should compare sets)
+        if len(all_images) != len(all_labels):
+            raise RuntimeError('Images/label mismatch!')
+        # get all the files
+        num_files = len(all_images)
+        num_valid = int(num_files * 0.3)
+        num_train = num_files - num_valid
+        # get all indices and shuffle them
+        all_ids = np.arange(num_files)
+        np.random.shuffle(all_ids)
+        train_ids = all_ids[1:num_train]
+        val_ids = all_ids[num_train:]
+        # move all files
+        for ind in all_ids:
+            # train
+            if ind <= num_train:
+                os.rename(image_path+all_images[ind],
+                          image_path_train+all_images[ind])
+                os.rename(label_path+all_labels[ind],
+                          label_path_train+all_labels[ind])
+            # val
+            else:
+                os.rename(image_path+all_images[ind],
+                          image_path_val+all_images[ind])
+                os.rename(label_path+all_labels[ind],
+                          label_path_val+all_labels[ind])
+            # remove empty directories
+            for a_dir in [image_path, label_path]:
+                if not os.listdir(image_path):
+                    print(str(a_dir) + ' empty, deleting')
+                    os.rmdir(image_path)
+                else:
+                    print(str(a_dir) + ' not empty, not deleting')
         else:
-            os.rename(image_path+all_images[ind],
-                      image_path_val+all_images[ind])
-            os.rename(label_path+all_labels[ind],
-                      label_path_val+all_labels[ind])
-    # remove empty directories
-    for a_dir in [image_path, label_path]:
-        if not os.listdir(image_path):
-            print(str(a_dir) + ' empty, deleting')
-            os.rmdir(image_path)
-        else:
-            print(str(a_dir) + ' not empty, not deleting')
+            print('No data')
+
+
 
 if __name__ == '__main__':
     # parse args
@@ -248,8 +253,8 @@ if __name__ == '__main__':
     df, files2delete = get_all_bounding(config)
     print('Got all bounding boxes')
     # get all the bound box labels
-    # build_labels(df, files2delete, config['dstl']['imag_w'],
-                 # config['dstl']['imag_h'], lab_format='voc')
+    build_labels(df, files2delete, config['dstl']['imag_w'],
+                 config['dstl']['imag_h'], lab_format='voc')
     print('Built all labels')
     # build val/train
     path2data = os.getcwd() + config['dstl']['proc_data_rel']
