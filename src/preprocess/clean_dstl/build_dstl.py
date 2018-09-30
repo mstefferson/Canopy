@@ -64,16 +64,14 @@ def main(config):
 if __name__ == '__main__':
     '''
     Executeable:
-    python3 src/preprocess/clean_dstl/build_dstl_dataset.py /
+    python src/preprocess/clean_dstl/build_dstl_dataset.py /
         configs/config_dstl.json
     '''
-
-    # parse inputs
-    parser = argparse.ArgumentParser()
     # parse args
     parser = argparse.ArgumentParser()
-    parser.add_argument('config',
-                        help='config file')
+    parser.add_argument('-c',
+                        '--config',
+                        help='path to config file')
     args = parser.parse_args()
     config_path = args.config
     # load config

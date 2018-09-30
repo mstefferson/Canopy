@@ -339,8 +339,9 @@ if __name__ == '__main__':
     # parse args
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('config',
-                        help='config file')
+    parser.add_argument('-c',
+                        '--config',
+                        help='path to config file')
     args = parser.parse_args()
     config_path = args.config
     print(os.getcwd())

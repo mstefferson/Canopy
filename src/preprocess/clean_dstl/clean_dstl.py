@@ -587,7 +587,7 @@ def main(config):
         dir_path=data_path + 'three_band/',
         sub_dirs=config["dstl"]["sub_dirs"],
         image_save_dir=save_path + 'chopped_images',
-        annotations_save_dir=save_path + 'annotations',
+        annotations_save_dir=save_path,
         geojson_dir=geojson_dir,
         grid_sizes=grid_sizes,
         block_shape=(config["dstl"]["imag_h"], config["dstl"]["imag_w"], 3)
@@ -604,8 +604,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     # parse args
     parser = argparse.ArgumentParser()
-    parser.add_argument('config',
-                        help='config file')
+    parser.add_argument('-c',
+                        '--config',
+                        help='path to config file')
     args = parser.parse_args()
     config_path = args.config
     # load config
