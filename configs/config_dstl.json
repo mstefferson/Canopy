@@ -5,6 +5,7 @@
         "raw_data_rel": "/data/raw/dstl/",
         "proc_data_rel": "/data/processed/dstl/",
         "label_format": "voc",
+        "valid_frac": 0.3,
         "sub_dirs": ["6010"]
     }
 }

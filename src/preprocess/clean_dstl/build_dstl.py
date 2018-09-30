@@ -9,7 +9,7 @@ import warnings
 def main(config):
     '''
     Handles the cleaning and labeling of dstl images (equivalent to running
-        clean_dstl and label_dstl. This will build a nice labeled training    
+        clean_dstl and label_dstl. This will build a nice labeled training
         and validation set with the appropriate format. This wraps
         clean_dstl and label_dstl
     Args:
@@ -57,7 +57,8 @@ def main(config):
     print('Built all labels')
     # build val/train
     path2data = os.getcwd() + config['dstl']['proc_data_rel']
-    label_dstl.build_val_train(path2data, val_size=0.3)
+    label_dstl.build_val_train(path2data,
+                               val_size=config['dstl']['valid_frac'])
     print('Move to train/val')
 
 

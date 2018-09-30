@@ -20,13 +20,13 @@ def write_voc_file(fname, labels, coords, img_width, img_height):
         coords - list of position of objects in file
         img_width - width of image
         img_height - height of image
-    Returns: 
+    Returns:
         annotation - XML tree for image file
     Updates:
         N/A
     Writes to file:
         N/A
-    Credit: 
+    Credit:
         eweill/convert-datasets
     """
     annotation = etree.Element('annotation')
@@ -89,8 +89,8 @@ def get_all_bounding(process_path, imag_w, imag_h):
         file built from clean_dstl
 
     Args:
-        process_path (str): Path to processed data (parent of chopped images 
-            and annotations file). This should be the processed data path 
+        process_path (str): Path to processed data (parent of chopped images
+            and annotations file). This should be the processed data path
             in config
         imag_w (int): Chopped image width
         imag_h (int): Chopped image height
@@ -104,8 +104,7 @@ def get_all_bounding(process_path, imag_w, imag_h):
         N/A
     '''
     # get file
-    ann_file = (os.getcwd() + process_path +
-                "annotations.csv")
+    ann_file = os.getcwd() + process_path + "annotations.csv"
     df = pd.read_csv(ann_file, header=None)
     df.columns = ['file', 'x_min', 'y_min', 'x_max', 'y_max', 'label_str']
     label_path = os.getcwd() + process_path + "/labels"
@@ -119,7 +118,7 @@ def get_all_bounding(process_path, imag_w, imag_h):
     df = pd.read_csv(ann_file, header=None)
     df.columns = ['file', 'x_min', 'y_min', 'x_max', 'y_max', 'label_str']
     # find and remove all nans
-    files2delete = df.file.loc[df.isnull().any(axis=1)]
+    unlabelfiles = list(df.file.loc[df.isnull().any(axis=1)])
     # drop nans()
     df.dropna(axis=0, inplace=True)
     # set all the labels, after rerunning set just to trees
@@ -138,18 +137,17 @@ def get_all_bounding(process_path, imag_w, imag_h):
     df['h'] = h / height_image
     df['x'] = x_center
     df['y'] = y_center
-    return df, files2delete
+    return df, unlabelfiles
 
 
-def build_labels(df, files2delete, imag_w, imag_h, lab_format='voc'):
+def build_labels(df, unlabelfiles, imag_w, imag_h, lab_format='voc'):
     '''
     Given a df, builds image and label directories for the images
         with labels and deletes the unused ones.
-    
     Args:
         df (pd.Dataframe): Dataframe of the annotations from clean_dstl.
             Contains path info and labels for each images in dstl.
-        files2delete (list of strs): List of the full path of unlabeled
+        unlabelfiles (list of strs): List of the full path of unlabeled
             data that will be deleted
         imag_w (int): Chopped image width
         imag_h (int): Chopped image height
@@ -160,15 +158,19 @@ def build_labels(df, files2delete, imag_w, imag_h, lab_format='voc'):
         N/A
     Writes to file:
         Deletes unlabeled images and moves labeled images from
-        /base/path/data/processed/chopped_images to 
+        /base/path/data/processed/chopped_images to
         /base/path/data/processed/(images, labels)
     '''
-    # clean all unusable files
-    print('Deleting {} files'.format(len(np.unique(files2delete))))
-    for f_name in files2delete:
-        if os.path.exists(f_name):
-            os.remove(f_name)
-    print('Deleting {} files'.format(len(np.unique(files2delete))))
+    # move all unlabled data
+    if len(unlabelfiles) > 0:
+        base_dir = '/'.join(unlabelfiles[0].split('/')[:-2])
+        move_dir = base_dir + '/unlabeled/'
+        if not os.path.exists(move_dir):
+            os.makedirs(move_dir)
+            for f_name in unlabelfiles:
+                if os.path.exists(f_name):
+                    shutil.move(f_name, move_dir)
+    # move labeled data
     if len(df) > 0:
         # get base directory
         fullpath = df.iloc[0, 0]
@@ -239,7 +241,7 @@ def build_val_train(path2data, val_size=0.3):
     Updates:
         N/A
     Writes to file:
-        Removes /path2data/(images, labels) and writes 
+        Removes /path2data/(images, labels) and writes
             /path2data/(train, val)/(images, labels)
     '''
     # set up paths
@@ -251,8 +253,8 @@ def build_val_train(path2data, val_size=0.3):
         image_path_val = path2data + 'val/images/'
         label_path_val = path2data + 'val/labels/'
         # make dirs
-        all_dirs =  [image_path_train, label_path_train,
-                     image_path_val, label_path_val]
+        all_dirs = [image_path_train, label_path_train,
+                    image_path_val, label_path_val]
         for a_dir in all_dirs:
             if not os.path.exists(a_dir):
                 os.makedirs(a_dir)
@@ -315,18 +317,18 @@ def main(config):
             /path2data/(train, val)/(images, labels)
     '''
     # get all the bound box labels
-    df, files2delete = get_all_bounding(config['dstl']['proc_data_rel'],
+    df, unlabelfiles = get_all_bounding(config['dstl']['proc_data_rel'],
                                         config['dstl']['imag_w'],
                                         config['dstl']['imag_h'])
     print('Got all bounding boxes')
     # get all the bound box labels
-    build_labels(df, files2delete, config['dstl']['imag_w'],
+    build_labels(df, unlabelfiles, config['dstl']['imag_w'],
                  config['dstl']['imag_h'],
                  lab_format=config['dstl']['label_format'])
     print('Built all labels')
     # build val/train
     path2data = os.getcwd() + config['dstl']['proc_data_rel']
-    build_val_train(path2data, val_size=0.3)
+    build_val_train(path2data, val_size=config['dstl']['valid_frac'])
     print('Move to train/val')
 
 
