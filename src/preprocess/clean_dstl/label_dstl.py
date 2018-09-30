@@ -79,7 +79,7 @@ def write_voc_file(fname, labels, coords, img_width, img_height):
 def get_all_bounding(config):
     # get file
     ann_file = (os.getcwd() + config['dstl']['proc_data_rel'] +
-                "annotations/annotations.csv")
+                "annotations.csv")
     df = pd.read_csv(ann_file, header=None)
     df.columns = ['file', 'x_min', 'y_min', 'x_max', 'y_max', 'label_str']
     label_path = os.getcwd() + config['dstl']['proc_data_rel'] + "/labels"
@@ -94,7 +94,6 @@ def get_all_bounding(config):
     df.columns = ['file', 'x_min', 'y_min', 'x_max', 'y_max', 'label_str']
     # find and remove all nans
     files2delete = df.file.loc[df.isnull().any(axis=1)]
-    print('Deleting {} files'.format(len(np.unique(files2delete))))
     # drop nans()
     df.dropna(axis=0, inplace=True)
     # set all the labels, after rerunning set just to trees
@@ -118,9 +117,11 @@ def get_all_bounding(config):
 
 def build_labels(df, files2delete, imag_w, imag_h, lab_format='voc'):
     # clean all unusable files
+    print('Deleting {} files'.format(len(np.unique(files2delete))))
     for f_name in files2delete:
         if os.path.exists(f_name):
             os.remove(f_name)
+    print('Deleting {} files'.format(len(np.unique(files2delete))))
     if len(df) > 0:
         # get base directory
         fullpath = df.iloc[0, 0]
@@ -133,7 +134,7 @@ def build_labels(df, files2delete, imag_w, imag_h, lab_format='voc'):
         # grab files
         files2use = pd.unique(df['file'])
         # build labels for usable files
-        counter = 0
+        print('Found {} labeled files'.format(len(np.unique(files2use))))
         for f_name in files2use:
             # convert data for file
             data_temp = df.loc[df['file'] == f_name]
@@ -167,7 +168,6 @@ def build_labels(df, files2delete, imag_w, imag_h, lab_format='voc'):
                              'Must be voc or yolo')
                 raise RuntimeError(error_str)
             os.rename(f_name, f_img)
-            counter += 1
         # remove chopped_files directory
         if not os.listdir(chopped_dir):
             print('Chopped empty, deleting')
@@ -175,7 +175,7 @@ def build_labels(df, files2delete, imag_w, imag_h, lab_format='voc'):
         else:
             print('Chopped not empty, not deleting')
     else:
-        print('No data')
+        print('No labeled data')
 
 
 def build_val_train(path2data, val_size=0.3):
@@ -224,16 +224,15 @@ def build_val_train(path2data, val_size=0.3):
                           image_path_val+all_images[ind])
                 os.rename(label_path+all_labels[ind],
                           label_path_val+all_labels[ind])
-            # remove empty directories
-            for a_dir in [image_path, label_path]:
-                if not os.listdir(image_path):
-                    print(str(a_dir) + ' empty, deleting')
-                    os.rmdir(image_path)
-                else:
-                    print(str(a_dir) + ' not empty, not deleting')
-        else:
-            print('No data')
-
+        # remove empty directories
+        for a_dir in [image_path, label_path]:
+            if not os.listdir(a_dir):
+                print(str(a_dir) + ' empty, deleting')
+                os.rmdir(a_dir)
+            else:
+                print(str(a_dir) + ' not empty, not deleting')
+    else:
+        print('No data to move to train/val')
 
 
 if __name__ == '__main__':

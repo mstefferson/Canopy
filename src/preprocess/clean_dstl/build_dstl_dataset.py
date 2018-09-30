@@ -3,6 +3,7 @@ import label_dstl
 import argparse
 import json
 import os
+import warnings
 
 
 if __name__ == '__main__':
@@ -17,6 +18,9 @@ if __name__ == '__main__':
     # load config
     with open(config_path) as config_buffer:
         config = json.load(config_buffer)
+    # make dirs
+    if not os.path.exists(os.getcwd() + config["dstl"]["proc_data_rel"]):
+        os.makedirs(os.getcwd() + config["dstl"]["proc_data_rel"])
     # set paths
     data_path = os.getcwd() + config["dstl"]["raw_data_rel"]
     save_path = os.getcwd() + config["dstl"]["proc_data_rel"]    
@@ -24,16 +28,18 @@ if __name__ == '__main__':
     grid_file = data_path + "grid_sizes.csv"
     grid_sizes = clean_dstl.import_grid_sizes(grid_file)
     # process the images
-    print((config["dstl"]["imag_h"], config["dstl"]["imag_w"], 3))
-    # clean_dstl.process_dstl_directory(
-        # dir_path=data_path + 'three_band/',
-        # sub_dirs=config["dstl"]["sub_dirs"],
-        # image_save_dir=save_path + 'chopped_images',
-        # annotations_save_dir=save_path + 'annotations',
-        # geojson_dir=geojson_dir,
-        # grid_sizes=grid_sizes,
-        # block_shape=(config["dstl"]["imag_h"], config["dstl"]["imag_w"], 3)
-    # )
+    # ignore low contrast warning
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        clean_dstl.process_dstl_directory(
+            dir_path=data_path + 'three_band/',
+            sub_dirs=config["dstl"]["sub_dirs"],
+            image_save_dir=save_path + 'chopped_images',
+            annotations_save_dir=save_path,
+            geojson_dir=geojson_dir,
+            grid_sizes=grid_sizes,
+            block_shape=(config["dstl"]["imag_h"], config["dstl"]["imag_w"], 3)
+        )
     print('Processed all data')
     # get all the bound box labels
     df, files2delete = label_dstl.get_all_bounding(config)
