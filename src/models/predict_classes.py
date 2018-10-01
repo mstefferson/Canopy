@@ -29,7 +29,7 @@ class PredImg():
         self.image = imageio.imread(imag_path)
 
     def set_image(self, image):
-        # set image 
+        # set image
         self.image = image
 
     def write2file(self, data, fileid):
@@ -75,6 +75,10 @@ class SatelliteTif():
                  r_start=0, r_end=np.inf, c_start=0, c_end=np.inf):
         # store tif
         self.tiff_data = rasterio.open(tif_path)
+        # store geometry conversion type
+        self.crs = self.tiff_data.crs
+        # lat/lon project string
+        self.lonlat_proj = 'epsg:4326'
         # set geometry
         self.tif_norm = 65535.
         self.jpg_norm = 355
@@ -99,6 +103,64 @@ class SatelliteTif():
         # all objects
         self.detected_objects = np.empty([0, 6])
 
+    def proj_lonlat_2_rc(self, lonlat):
+        '''
+        Description:
+            Convert lon/lat coordinates to rows and columns in the tif satellite
+            image. Uses pyproj to convert between coordinate systems
+        Args:
+            lonlat (np.array, size=[n,2]): array of longitude (col1) and lat (col2)
+        Returns:
+            rc (np.array shape=[n, 2]): row/columns in tif file for all
+                recorded points
+        Updates:
+            N/A
+        Write to file:
+            N/A
+        '''
+        # input lat/lon
+        in_proj = pyproj.Proj(init=self.lonlat_proj)
+        # output based on crs of tif/shp
+        out_proj = pyproj.Proj(dataset.crs)
+        # transform lat/lon to xy
+        x, y = pyproj.transform(in_proj, out_proj, lonlat[:, 0], lonlat[:, 1])
+        # convert rows and columns to xy map project
+        (r, c) = rasterio.transform.rowcol(dataset.transform, x, y)
+        # store it in numpy array
+        rc = np.array([r, c]).transpose()
+        return rc
+
+
+    def proj_rc_2_lonlat(self, rc):
+        '''
+        Description:
+            Convert row/columns of tif dataset to lat/lon.
+            Uses pyproj to convert between coordinate systems
+        Args:
+            lon (float): longitude
+            lat (float): latitude
+            dataset (rasterio.io.DatasetReader): Gdal data structure from opening a
+                tif, dataset = rasterio.open('...')
+        Returns:
+            rc (np.array shape=[n, 2]): row/columns in tif file for all
+                recorded points
+        Updates:
+            N/A
+        Write to file:
+            N/A
+        '''
+        # convert rows and columns to xy map project
+        (x, y) = rasterio.transform.xy(dataset.transform, rc[:, 0], rc[:, 1])
+        # input based on crs of tif/shp
+        in_proj = pyproj.Proj(self.crs)
+        # output lat/lon
+        out_proj = pyproj.Proj(init=self.lonlat_proj)
+        # transform xy to lat/lon
+        lon, lat = pyproj.transform(in_proj, out_proj, x, y)
+        # store it in numpy array
+        lonlat = np.array([lon, lat]).transpose()
+        return lonlat
+
     def build_origins(self):
         # get number of divisions
         div_w = int(np.floor(self.sat_pred_w / self.img_w))
@@ -116,15 +178,17 @@ class SatelliteTif():
         col_origins = np.arange(self.start_c, self.end_c, self.img_r)
         self.origin_list = [(r, c) for r in row_origins for c in col_origins]
 
+    def divide_tif():
+        print('write me')
+
     def get_subset(self, r_start, r_end, c_start, c_end):
         for (c_id, c) in enumerate(self.c_channels):
             self.data[:, :, c_id] = ds_all.read(band_num,
-                                                window=((r_start, r_end), 
-                                                (c_start, c_end)))
+                                                window=((r_start, r_end),
+                                                        (c_start, c_end)))
         # normalize
         self.data = self.data / self.tif_norm * self.jpg_norm
 
-        
     def pred_subset(self, r_start, r_end, c_start, c_end):
         self.data = self.get_subset(r_start, r_end, c_start, c_end)
         # set up prediction object
@@ -133,14 +197,12 @@ class SatelliteTif():
         self.pred_class.boxes_in_orig()
         return self.pred_class.boxes_global
 
-
     def pred_all(self):
         for origin in self.origin_list:
             boxes = pred_subset(sat_data,
                                 origin[0], origin[0]+self.img_h,
                                 origin[1], origin[1]+self.img_w)
             self.boxes_global = np.append(self.boxes_global, boxes)
-         
 
 # def pred_tiff(sat_file,  r_start=0,
               # r_end=np.inf, c_start=0, c_end=np.inf,
