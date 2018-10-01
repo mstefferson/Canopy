@@ -20,7 +20,7 @@ def build_model(config, weights_path):
         config (dict): configuration dictionary
         weights_path (str): path to pretrained weights
     Returns:
-        yolo (keras model, YOLO class): keras model 
+        yolo (keras model, YOLO class): keras model
     Updates:
         N/A
     Writes to file:
@@ -42,7 +42,7 @@ def predict_bounding_box(model, image):
     '''
     Predicts the bounding boxes for a single image
     Args:
-        yolo (keras model, YOLO class): keras model 
+        yolo (keras model, YOLO class): keras model
         image (np.array): image to predict on
     Returns:
         box_list (list of floats): a list of the bounding box labels
@@ -84,7 +84,8 @@ def main(args):
     Writes to file:
         If flags are set, writes detected image (image with bounding boxes)
             and the bounding box locations to file. The outputs are located
-            in directories with the same base path as the images, /base/path/images
+            in directories with the same base path as the images,
+            /base/path/images
     '''
     # set configs
     config_path = args.conf
