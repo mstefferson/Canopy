@@ -1,0 +1,10 @@
+{
+    "dstl" : {
+        "tif_file": "/data/raw/satfiles/athens_satellite.tif",
+        "proc_data_rel": "/data/processed/athens/",
+        "imag_w": 400,
+        "imag_h": 400,
+        "valid_frac": 0.3
+    }
+}
+

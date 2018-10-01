@@ -3,7 +3,6 @@ import imageio
 import numpy as np
 import rasterio
 import src.models.analyze_model
-import src.satellite_analyze
 
 
 class PredImg():
@@ -70,8 +69,9 @@ class PredImgRandom(PredImg):
 
 
 class SatelliteTif():
-    def __init__(self, tif_path, pred_class,
+    def __init__(self, tif_path, rel_path_2_data,
                  c_channels=[0, 1, 3], sub_img_w=200, sub_img_h=200,
+                 valid_frac = 0.3,
                  r_start=0, r_end=np.inf, c_start=0, c_end=np.inf):
         # store tif
         self.tiff_data = rasterio.open(tif_path)
@@ -83,25 +83,59 @@ class SatelliteTif():
         self.tif_norm = 65535.
         self.jpg_norm = 355
         self.c_channels = c_channels
-        self.sat_full_w = self.tiff_data.width
-        self.sat_full_h = self.tiff_data.height
-        self.img_w = self.sub_img_w
-        self.img_h = self.sub_img_h
-        # set prediction class
-        self.pred_class = pred_class
+        self.sat_w = self.tiff_data.width
+        self.sat_h = self.tiff_data.height
+        self.img_w = sub_img_w
+        self.img_h = sub_img_h
+        # save directory
+        self.base_dir = os.getcwd() + '/' + rel_path_2_data
+        self.pred_dir = self.base_dir + '/predict'
+        self.train_dir = self.base_dir + '/train'
+        self.valid_dir = self.base_dir + '/rel_path_2_data'
+        self.build_directories()
+        # set prediction class and train params
+        self.valid_frac = valid_frac
+        # self.pred_class = pred_class
         # get orgins for each subset
         self.r_end = np.min([r_end, self.sat_h])
         self.r_start = r_start
         self.c_end = np.min([c_end, self.sat_w])
         self.c_start = c_start
-        self.sat_pred_w = self.c_end - self.c_start
-        self.sat_pred_h = self.r_end - self.r_start
+        self.pred_origins = self.build_origins(self.r_start,
+                                               self.r_end,
+                                               self.c_start,
+                                               self.c_end)
+        # got training, sample from some fraction of the center of image
+        window = 0.4
+        num_train = 100
+        delta_window_start = (1-window) / 2
+        delta_window_end = 1 - (1-window) / 2
+        poss_train_origins = self.build_origins(delta_window_start*self.sat_h,
+                                                delta_window_end*self.sat_h,
+                                                delta_window_start*self.sat_w,
+                                                delta_window_end*self.sat_w)
+        print(poss_train_origins)
+        # get random sample
+        r_start_train = np.random.choice(poss_train_origins[:, 0], num_train)
+        c_start_train = np.random.choice(poss_train_origins[:, 1], num_train)
+        # coordinates
+        self.train_origins = np.array(
+            [r_start_train, c_start_train]).transpose()[:num_train].astype('int')
+        # self.sat_pred_w = self.c_end - self.c_start
+        # self.sat_pred_h = self.r_end - self.r_start
         # get origins
-        self.build_origins()
+        # self.build_origins()
         # initialize a subset to self
-        self.data = np.zeros(self.image_h, self.image_w, 3)
+        self.data = np.zeros((self.img_h, self.img_w, 3))
         # all objects
         self.detected_objects = np.empty([0, 6])
+
+    def build_directories(self):
+        dirs2build = [self.base_dir, self.pred_dir,
+                      self.train_dir,self.valid_dir]
+        for a_dir in dirs2build:
+            if not os.path.exists(a_dir):
+                os.makedirs(a_dir)
 
     def proj_lonlat_2_rc(self, lonlat):
         '''
@@ -130,20 +164,16 @@ class SatelliteTif():
         rc = np.array([r, c]).transpose()
         return rc
 
-
     def proj_rc_2_lonlat(self, rc):
         '''
         Description:
             Convert row/columns of tif dataset to lat/lon.
             Uses pyproj to convert between coordinate systems
         Args:
-            lon (float): longitude
-            lat (float): latitude
-            dataset (rasterio.io.DatasetReader): Gdal data structure from opening a
-                tif, dataset = rasterio.open('...')
-        Returns:
             rc (np.array shape=[n, 2]): row/columns in tif file for all
                 recorded points
+        Returns:
+            lonlat (np.array, size=[n,2]): array of longitude (col1) and lat (col2)
         Updates:
             N/A
         Write to file:
@@ -161,22 +191,138 @@ class SatelliteTif():
         lonlat = np.array([lon, lat]).transpose()
         return lonlat
 
-    def build_origins(self):
+    def build_origins(self, start_r, end_r, start_c, end_c):
         # get number of divisions
-        div_w = int(np.floor(self.sat_pred_w / self.img_w))
-        div_h = int(np.floor(self.sat_pred_h / self.img_h))
+        div_w = int(np.floor(self.sat_w / self.img_w))
+        div_h = int(np.floor(self.sat_h / self.img_h))
+        # set start and end to start/end on a division point
+        start_c = np.floor(start_c/div_w) * div_w
+        end_c = np.floor(end_c/div_w) * div_w
+        start_r = np.floor(start_r/div_h) * div_w
+        end_r = np.floor(end_r/div_h) * div_w
         # get trim off edges
-        trim_w = self.sat_pred_w - div_w*image_w
-        trim_h = self.sat_pred_h - div_h*image_h
+        # trim_w = self.sat_pred_w - div_w*image_w
+        # trim_h = self.sat_pred_h - div_h*image_h
         # fix start indices (columns/width, rows/height)
-        self.start_c = self.start_c + np.floor(trim_w/2)
-        self.end_c = self.end_c - np.ceil(trim_w/2)
-        self.start_r = self.start_c + np.floor(trim_h/2)
-        self.end_r = self.end_r - np.ceil(trim_h/2)
+        # start_c = start_c + np.floor(trim_w/2)
+        # end_c = end_c - np.ceil(trim_w/2)
+        # start_r = start_c + np.floor(trim_h/2)
+        # end_r = end_r - np.ceil(trim_h/2)
         # get all origins
-        row_origins = np.arange(self.start_r, self.end_r, self.img_w)
-        col_origins = np.arange(self.start_c, self.end_c, self.img_r)
-        self.origin_list = [(r, c) for r in row_origins for c in col_origins]
+        row_origins = np.arange(start_r, end_r, self.img_h)
+        col_origins = np.arange(start_c, end_c, self.img_w)
+        origin_list = np.array([(r, c) for r in row_origins for c in col_origins])
+        return origin_list
+
+    def build_test_train(sat_file, num_images, delta=200,
+                         split=0.3, c_channels=[0, 1, 3], fid_start=0):
+        '''
+        Description:
+            Builds a test/train set from random squares of a sat_file tif file
+        Args:
+            sat_file (str): path to satellite tif file
+            num_images (int): total number of images in data set
+            delta (int, optional): width/heigth of image in data set
+            split (float, optional): test/train split (frac in test)
+            c_channels (list of ints, optional): three color bands
+                to include in image. Tiff has four: r, g, b, IR
+            fid_start: initial file id to label images. e.g., image_fid.jpg
+        Returns:
+            N/A
+        Updates:
+            N/A
+        Write to file:
+            /app/data/(test,train)/images/image_*,
+            /app/data/(test,train)/images/key*: test and train image data
+                set with keys
+
+        '''
+        def save_data(sat_data, coors, num2save, num_total, path, save_str, fid):
+            '''
+            Description:
+                Nested function that actually writes the files
+            '''
+            look_up_name = 'key'
+            look_up_f = open(path + look_up_name + '.txt', 'w+')
+            look_up_dict = {}
+            for ii in np.arange(num2save):
+                # get subset
+                band_data = get_satellite_subset(sat_data,
+                                                 coors[ii, 0],
+                                                 coors[ii, 1],
+                                                 coors[ii, 2],
+                                                 coors[ii, 3])
+                # update band to save based on color channels
+                # must be saved as integars from 0, 255
+                band2save = np.array(255*band_data[:, :, c_channels],
+                                     dtype=np.uint8)
+                # save everything
+                img_save_name = save_str.format(fid+ii) + '.jpg'
+                # same image
+                imageio.imwrite(path + img_save_name, band2save)
+                # update lookup dict
+                look_up_dict[img_save_name] = train_coors[ii, :]
+                # update lookup txt file
+                line2save = (img_save_name
+                             + ' ' + str(coors[ii, 0])
+                             + ' ' + str(coors[ii, 1])
+                             + ' ' + str(coors[ii, 2])
+                             + ' ' + str(coors[ii, 3])
+                             + '\n')
+                look_up_f.write(line2save)
+            # save lookup dictionary
+            pickle.dump(look_up_dict, open(path + look_up_name + '.pkl', 'wb'))
+            # close txt file
+            look_up_f.close()
+        # build output directories if they don't exist
+        directory = '/app/data/athens/train/'
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        directory = '/app/data/athens/test/'
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        # get sat data
+        sat_data = rasterio.open(sat_file)
+        # get number of rows and columns
+        num_r = sat_data.height
+        num_c = sat_data.width
+        # find all possible subsections
+        r_min = num_r / 4
+        r_max = 3*num_r / 4
+        c_min = num_c / 4
+        c_max = 3*num_c / 4
+        # get all possible row/column starting points
+        r_start_all = np.arange(r_min, r_max, delta)
+        c_start_all = np.arange(r_min, r_max, delta)
+        # get random sample
+        r_start = np.random.choice(r_start_all, num_images)
+        c_start = np.random.choice(c_start_all, num_images)
+        # coordinates
+        start_coord = np.array(
+            [r_start, c_start]).transpose()[:num_images].astype('int')
+        # build full array (r_start, r_end, c_start, c_end)
+        all_coors = np.zeros((num_images, 4))
+        all_coors[:, 0] = start_coord[:, 0]
+        all_coors[:, 1] = start_coord[:, 0] + delta
+        all_coors[:, 2] = start_coord[:, 1]
+        all_coors[:, 3] = start_coord[:, 1] + delta
+        # split into test/train
+        all_coors = all_coors.astype('int')
+        num_test = int(np.floor(num_images * split))
+        num_train = int(num_images - num_test)
+        train_coors = all_coors[:num_train, :]
+        test_coors = all_coors[num_train:, :]
+        # set str format for save name
+        num_dec = int(np.ceil(np.log10(fid + num_total))) + 1
+        save_str = 'image_{:0' + str(num_dec) + 'd}'
+        # save train
+        train_path = '/app/data/train/images/'
+        save_data(sat_data, train_coors, num_train,
+                  num_images, train_path, save_str, fid)
+        # save test
+        test_path = '/app/data/test/images/'
+        save_data(sat_data, test_coors, num_test,
+                  num_images, test_path, save_str, fid+num_train)
 
     def divide_tif():
         print('write me')
