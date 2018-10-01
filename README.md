@@ -84,7 +84,11 @@ Copy and paste the output into the anchor box input in the config file
 
 Now we ready to train. Start up a keras environment on an AWS.
 ```
-source tensorflow-p36
+source activate tensorflow-p36
+```
+or
+```
+./run_aws_gpu
 ```
 
 ### Train on dstl
