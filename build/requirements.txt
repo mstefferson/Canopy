@@ -14,3 +14,4 @@ opencv-python
 imgaug==0.2.6
 Keras==2.2.2
 tensorflow==1.11.0
+git+https://github.com/jupyter/jupyter_console
