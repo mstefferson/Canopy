@@ -1,5 +1,6 @@
 from keras.models import Model
 import tensorflow as tf
+import os
 from keras.layers import Reshape, Activation, Conv2D, Input, MaxPooling2D
 from keras.layers import BatchNormalization, Flatten, Dense, Lambda
 from keras.layers.advanced_activations import LeakyReLU
@@ -10,7 +11,7 @@ from keras.applications.vgg16 import VGG16
 from keras.applications.resnet50 import ResNet50
 
 # set path to weights (must be there)
-parent_path = "/home/ubuntu/AutomatedTreeCensus/model_weights/"
+parent_path = os.getcwd() + "/model_weights/"
 FULL_YOLO_BACKEND_PATH = parent_path + "full_yolo_backend.h5"
 TINY_YOLO_BACKEND_PATH = parent_path + "tiny_yolo_backend.h5"
 

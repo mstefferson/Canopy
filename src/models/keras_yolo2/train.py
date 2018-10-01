@@ -31,14 +31,15 @@ def main(args):
     with open(config_path) as config_buffer:
         config = json.load(config_buffer)
     # set paths
+    curr_dir = os.getcwd()
     train_image_folder = (curr_dir + '/' + 
                           config['train']['train_image_folder'])
     train_annot_folder = (curr_dir + '/' + 
                           config['train']['train_annot_folder'])
     valid_image_folder = (curr_dir + '/' + 
-                          config['train']['valid_image_folder'])
+                          config['valid']['valid_image_folder'])
     valid_annot_folder = (curr_dir + '/' + 
-                          config['train']['valid_annot_folder'])
+                          config['valid']['valid_annot_folder'])
     # parse annotations of the training set
     train_imgs, train_labels = (
         parse_annotation(train_annot_folder,
@@ -50,7 +51,7 @@ def main(args):
     if os.path.exists(valid_annot_folder):
         valid_imgs, valid_labels = (
             parse_annotation(valid_annot_folder,
-                             valid_image_folder
+                             valid_image_folder,
                              config['model']['labels']))
     else:
         train_valid_split = int(0.8*len(train_imgs))
@@ -79,10 +80,10 @@ def main(args):
                 input_size=config['model']['input_size'],
                 labels=config['model']['labels'],
                 max_box_per_image=config['model']['max_box_per_image'],
-                anchors=config['model']['anchors'])
-
+                anchors=config['model']['anchors'],
+                freeze_backend=config['model']['freeze_backend'])
     # load the pretrained weights (if any)
-    pre_w_path = curr_dir + '/' + config['train']['pretrained_weights']
+    pre_w_path = config['train']['pretrained_weights']
     if os.path.exists(pre_w_path):
         print("Loading pre-trained weights in",
               pre_w_path)

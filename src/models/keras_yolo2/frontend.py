@@ -16,12 +16,13 @@ from backend import TinyYoloFeature, FullYoloFeature
 
 
 class YOLO(object):
-    def __init__(self, backend,
-                       input_size, 
-                       labels, 
-                       max_box_per_image,
-                       anchors):
-
+    def __init__(self, 
+                 backend,
+                 input_size, 
+                 labels, 
+                 max_box_per_image,
+                 anchors,
+                 freeze_backend=False):
         self.input_size = input_size
         
         self.labels   = list(labels)
@@ -46,6 +47,11 @@ class YOLO(object):
 
         self.grid_h, self.grid_w = self.feature_extractor.get_output_shape()        
         features = self.feature_extractor.extract(input_image)            
+        
+        # freeze base layers
+        if freeze_backend:
+            print('Freezing backend layers')
+            self.feature_extractor.feature_extractor.trainable=False
 
         # make the object detection layer
         output = Conv2D(self.nb_box * (4 + 1 + self.nb_class), 
@@ -57,8 +63,6 @@ class YOLO(object):
         output = Lambda(lambda args: args[0])([output, self.true_boxes])
 
         self.model = Model([input_image, self.true_boxes], output)
-
-        
         # initialize the weights of the detection layer
         layer = self.model.layers[-4]
         weights = layer.get_weights()
