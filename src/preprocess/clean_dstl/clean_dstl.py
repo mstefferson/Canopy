@@ -565,7 +565,7 @@ def main(config):
     '''
     Chops up and build annotations for the dstl data set
     Args:
-        config (dist): loaded dstl config json. Contains image and path info
+        config (dict): loaded dstl config json. Contains image and path info
     Returns:
         N/A
     Update:

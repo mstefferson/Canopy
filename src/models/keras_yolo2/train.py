@@ -13,21 +13,24 @@ from src.models.keras_yolo2.frontend import YOLO
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-argparser = argparse.ArgumentParser(
-    description='Train and validate YOLO_v2 model on any dataset')
-
-argparser.add_argument(
-    '-c',
-    '--conf',
-    help='path to configuration file')
-
-
-def _main_(args):
-    config_path = args.conf
-
+def main(args):
+    '''
+    Trains the yolov2 model
+    Args:
+        args (argparser.parse_args object): argument object with attibutes:
+            args.conf: config file
+    Returns:
+        N/A
+    Updates:
+        N/A
+    Writes to file:
+        -A log file in train_info/
+        -The train weights---location based on config
+    '''
     # get configs
+    config_path = args.conf
     with open(config_path) as config_buffer:
-        config = json.loads(config_buffer.read())
+        config = json.load(config_buffer)
 
     # store training info to a file
 
@@ -124,5 +127,19 @@ def _main_(args):
 
 
 if __name__ == '__main__':
+    '''
+    Executeable:
+    python src/models/keras_yolo2/train.py -c configs/config_yolo.json
+
+    Credit: Code adapted from experiencor/keras-yolo2
+    '''
+    # parse args
+    argparser = argparse.ArgumentParser(
+    description='Train and validate YOLO_v2 model on any dataset')
+    argparser.add_argument(
+        '-c',
+        '--conf',
+        help='path to configuration file')
     args = argparser.parse_args()
-    _main_(args)
+    # run main
+    main(args)

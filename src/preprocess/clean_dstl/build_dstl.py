@@ -13,7 +13,7 @@ def main(config):
         and validation set with the appropriate format. This wraps
         clean_dstl and label_dstl
     Args:
-        config (dist): loaded dstl config json. Contains image and path info
+        config (dict): loaded dstl config json. Contains image and path info
     Returns:
         N/A
     Update:
