@@ -1,23 +1,10 @@
 import random
 import argparse
 import numpy as np
-
+import os
 from preprocessing import parse_annotation
 import json
 
-argparser = argparse.ArgumentParser()
-
-argparser.add_argument(
-    '-c',
-    '--conf',
-    default='config.json',
-    help='path to configuration file')
-
-argparser.add_argument(
-    '-a',
-    '--anchors',
-    default=5,
-    help='number of anchors to use')
 
 def IOU(ann, centroids):
     w, h = ann
@@ -101,15 +88,19 @@ def run_kmeans(ann_dims, anchor_num):
         old_distances = distances.copy()
 
 def main(argv):
+    # get configs
     config_path = args.conf
     num_anchors = args.anchors
-
     with open(config_path) as config_buffer:
-        config = json.loads(config_buffer.read())
-
-    train_imgs, train_labels = parse_annotation(config['train']['train_annot_folder'],
-                                                config['train']['train_image_folder'],
-                                                config['model']['labels'])
+        config = json.load(config_buffer)
+    # set paths
+    curr_dir = os.getcwd()
+    train_image_folder = (curr_dir + '/' + 
+                          config['train']['train_image_folder'])
+    train_annot_folder = (curr_dir + '/' + 
+                          config['train']['train_annot_folder'])
+    train_imgs, train_labels = parse_annotation(
+        train_annot_folder, train_image_folder, config['model']['labels'])
 
     grid_w = config['model']['input_size']/32
     grid_h = config['model']['input_size']/32
@@ -133,5 +124,16 @@ def main(argv):
     print_anchors(centroids)
 
 if __name__ == '__main__':
+    argparser = argparse.ArgumentParser()
+    argparser.add_argument(
+        '-c',
+        '--conf',
+        default='configs/config_yolo.json',
+        help='path to configuration file')
+    argparser.add_argument(
+        '-a',
+        '--anchors',
+        default=5,
+        help='number of anchors to use')
     args = argparser.parse_args()
     main(args)

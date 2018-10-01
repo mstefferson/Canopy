@@ -69,6 +69,26 @@ python src/preprocess/clean_dstl/build_dstl_dataset.py -c configs/config_dstl.js
 ```
 
 ## Train
+### Set-up
+
+I ran all training on an AWD instance: Deep Learning AMI (Ubuntu) Version 13.0 - ami-00499ff523cc859e6. I used GPU Compute node, p2.xlarge
+
+Make sure the paths in the config file configs/config_yolo.json the paths should be relative to the current working director. **Do not put the full path.** The code handles the path up to the working directory. If the working directory is /path/2/wd/ and the data is located in wd/path/2/data, the 'path/2/data' should go in the config file.  
+
+If you'd like, you can create new anchor boxes for the yolo model (or use mine). To
+create new anchor boxes, open up a shell in docker and run
+```
+src/models/keras_yolo2/gen_anchors.py -c configs/config_yolo.json
+```
+Copy and paste the output into the anchor box input in the config file
+
+Now we ready to train. Start up a keras environment on an AWS.
+```
+source tensorflow-p36
+```
+
+### Train on dstl
+
 ```
 python src/models/keras_yolo2/train.py -c configs/config_yolo.json
 ```

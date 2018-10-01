@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-
 import datetime
 import argparse
 import os
@@ -31,26 +30,31 @@ def main(args):
     config_path = args.conf
     with open(config_path) as config_buffer:
         config = json.load(config_buffer)
-
-    # store training info to a file
-
+    # set paths
+    train_image_folder = (curr_dir + '/' + 
+                          config['train']['train_image_folder'])
+    train_annot_folder = (curr_dir + '/' + 
+                          config['train']['train_annot_folder'])
+    valid_image_folder = (curr_dir + '/' + 
+                          config['train']['valid_image_folder'])
+    valid_annot_folder = (curr_dir + '/' + 
+                          config['train']['valid_annot_folder'])
     # parse annotations of the training set
     train_imgs, train_labels = (
-        parse_annotation(config['train']['train_annot_folder'],
-                         config['train']['train_image_folder'],
+        parse_annotation(train_annot_folder,
+                         train_image_folder,
                          config['model']['labels']))
 
     # parse annotations of the validation set,
     # if any, otherwise split the training set
-    if os.path.exists(config['valid']['valid_annot_folder']):
+    if os.path.exists(valid_annot_folder):
         valid_imgs, valid_labels = (
-            parse_annotation(config['valid']['valid_annot_folder'],
-                             config['valid']['valid_image_folder'],
+            parse_annotation(valid_annot_folder,
+                             valid_image_folder
                              config['model']['labels']))
     else:
         train_valid_split = int(0.8*len(train_imgs))
         np.random.shuffle(train_imgs)
-
         valid_imgs = train_imgs[train_valid_split:]
         train_imgs = train_imgs[:train_valid_split]
 
@@ -78,10 +82,11 @@ def main(args):
                 anchors=config['model']['anchors'])
 
     # load the pretrained weights (if any)
-    if os.path.exists(config['train']['pretrained_weights']):
+    pre_w_path = curr_dir + '/' + config['train']['pretrained_weights']
+    if os.path.exists(pre_w_path):
         print("Loading pre-trained weights in",
-              config['train']['pretrained_weights'])
-        yolo.load_weights(config['train']['pretrained_weights'])
+              pre_w_path)
+        yolo.load_weights(pre_w_path)
 
     # start the training process
     ave_pred, mAP = yolo.train(train_imgs=train_imgs,

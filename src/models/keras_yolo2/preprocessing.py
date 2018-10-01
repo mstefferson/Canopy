@@ -11,12 +11,10 @@ from utils import BoundBox, bbox_iou
 def parse_annotation(ann_dir, img_dir, labels=[]):
     all_imgs = []
     seen_labels = {}
-    
     for ann in sorted(os.listdir(ann_dir)):
         img = {'object':[]}
 
         tree = ET.parse(ann_dir + ann)
-        
         for elem in tree.iter():
             if 'filename' in elem.tag:
                 img['filename'] = img_dir + elem.text
