@@ -104,8 +104,9 @@ def main(args):
     box_list, bboxes = predict_bounding_box(yolo_model, image)
     # get base directory for writing files
     path_info_list = image_path.split('/')
-    base_dir = '/'.join(path_info_list[:-1])
-    file_id = image_path.split[-1][:-4]
+    base_dir = '/'.join(path_info_list[:-2])
+    file_name = path_info_list[-1]
+    file_id = file_name[:-4]
     if write_file:
         # build file names and directories
         result_dir = '/bb_info/'
@@ -121,7 +122,7 @@ def main(args):
         result_dir = '/images_detected/'
         path2write = base_dir + result_dir
         filename = (path2write + file_id +
-                    '_detected' + image_path.split[-1][-4:])
+                    '_detected' + file_name[-4:])
         if not os.path.exists(path2write):
             os.makedirs(path2write)
         image = draw_boxes(image, bboxes, config['model']['labels'])
