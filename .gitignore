@@ -4,7 +4,6 @@ config.yaml
 
 # cached/accessory
 .ipynb_checkpoints/
-src/*.pyc
 src/__pycache__
 __pycache__
 .streamlit
@@ -16,10 +15,17 @@ notes.txt
 *log
 *jpg
 *tif
+*xml
 notebooks/Scratch.ipynb
+Untitled.ipynb
 
 
 # temp files
 *swp
+*pyc
 *swo
+
+# model directories
+model_weights/
+train_info/
 
