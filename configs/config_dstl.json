@@ -1,7 +1,7 @@
 {
     "dstl" : {
-        "imag_w": 300,
-        "imag_h": 300,
+        "imag_w": 400,
+        "imag_h": 400,
         "raw_data_rel": "/data/raw/dstl/",
         "proc_data_rel": "/data/processed/dstl/",
         "label_format": "voc",

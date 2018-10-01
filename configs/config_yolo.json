@@ -1,7 +1,7 @@
 {
     "model" : {
         "backend":              "FullYolo",
-        "input_size":           200,
+        "input_size":           400,
         "anchors":              [0.00, 0.00, 0.33, 0.34, 0.43, 1.02, 0.60, 0.53, 1.17, 0.89],
         "max_box_per_image":    40,        
         "labels":               ["trees"],
