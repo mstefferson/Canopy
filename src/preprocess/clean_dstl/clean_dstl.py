@@ -1,8 +1,6 @@
 """This script handles pulling in the data from the kaggle competition
 from DSTL, cleaning it, and saving it in a format that's
-appropriate to be read in by the
-keras-retinanet model
-
+appropriate to be read in by the keras-retinanet model 
 
 Warning
 -------
@@ -33,6 +31,13 @@ import data_utils
 
 
 MAP_TO_LOCAL_LABELS = {
+    'MASTS_RADIO_TOWER': None,
+    'BRIDGE': None,
+    'AQUATIC_SMALL': None,
+    'FLAGPOLE': None,
+    'PYLONS': None,
+    'EXTRACTION_MINE': None,
+    'SATELLITE_DISHES_DISH_AERIAL': None,
     'LARGE_BUILDING': None,
     'RESIDENTIAL_BUILDING': None,
     'NON_RESIDENTIAL_BUILDING': None,
@@ -41,6 +46,8 @@ MAP_TO_LOCAL_LABELS = {
     'POOR_DIRT_CART_TRACK': None,
     'FOOTPATH_TRAIL': None,
     'WOODLAND': None,
+    'ORCHARD': None,
+    'DRY_RIVERBED': None,
     'HEDGEROWS': None,
     'GROUP_TREES': 'trees',
     'STANDALONE_TREES': 'trees',
@@ -433,6 +440,7 @@ def process_dstl_directory(dir_path,
                            annotations_save_dir,
                            geojson_dir,
                            grid_sizes,
+                           verbose=False,
                            block_shape=(300, 300, 3)):
     """For a directory of DSTL images, import and process into acceptable model
     format
@@ -459,7 +467,7 @@ def process_dstl_directory(dir_path,
     annotations_save_path = os.path.join(annotations_save_dir, 'annotations.csv')
     loader = dstl_loader(geojson_dir=geojson_dir, grid_sizes=grid_sizes)
 
-    with open(annotations_save_path, 'a') as csv_file:
+    with open(annotations_save_path, 'w+') as csv_file:
 
         csvwriter = csv.writer(csv_file)
         processor = dstl_processor(
@@ -470,7 +478,8 @@ def process_dstl_directory(dir_path,
 
         for img_path in glob.iglob(dir_path + '*.tif'):
             if True in [sub_dir in img_path for sub_dir in sub_dirs]:
-                print("processing image: ", img_path)
+                if verbose:
+                    print("processing image: ", img_path)
                 dstl_image = loader(img_path)
                 processor(dstl_image)
 

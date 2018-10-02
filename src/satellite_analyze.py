@@ -210,7 +210,13 @@ def build_test_train(sat_file, num_images, delta=200,
         pickle.dump(look_up_dict, open(path + look_up_name + '.pkl', 'wb'))
         # close txt file
         look_up_f.close()
-
+    # build output directories if they don't exist
+    directory = '/app/data/train/'
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+    directory = '/app/data/test/'
+    if not os.path.exists(directory):
+        os.makedirs(directory)
     # get sat data
     sat_data = rasterio.open(sat_file)
     # get number of rows and columns
@@ -255,7 +261,8 @@ def build_test_train(sat_file, num_images, delta=200,
               num_images, test_path, save_str, fid+num_train)
 
 
-def get_satellite_subset(ds_all, r_start, r_end, c_start, c_end):
+def get_satellite_subset(ds_all, r_start, r_end, c_start, c_end,
+                         norm=None):
     '''
     Description:
         Returns a numpy data array of the rasted satellite
@@ -267,6 +274,7 @@ def get_satellite_subset(ds_all, r_start, r_end, c_start, c_end):
         c_start (int): Initial column pixel number of subset
         r_end (int): Initial row pixel number of subset
         c_end (int): Final row pixel number of subset
+        norm (float): normalization value (max(array) <= norm)
     Returns:
         band_data (np.array, size=[r_del, c_del, 4]): The rastered image
             data for all bands
@@ -298,7 +306,9 @@ def get_satellite_subset(ds_all, r_start, r_end, c_start, c_end):
         # grab data
         band_data[:, :, index] = data
     # scale data
-    band_data = band_data / np.max(band_data)
+    if norm:
+        tifmax = 65535.
+        band_data = norm / tifmax * band_data
     return band_data
 
 

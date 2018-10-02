@@ -1,0 +1,25 @@
+{
+  "build_info":{
+    "warnings": true,
+    "train": true,
+    "valid": true,
+    "predict": true
+  },
+  "sat_info":{
+      "tif_file": "data/raw/athens/athens_satellite.tif",
+      "processed_data_path": "data/processed/athens",
+      "output_path": "tree_locations",
+      "output_file_name": "tree_loc.csv",
+      "c_channels": [0, 1, 3],
+      "imag_w": 400,
+      "imag_h": 400,
+      "train_window": 0.3,
+      "num_train": 20,
+      "valid_frac": 0.3,
+      "r_pred_start": 1000,
+      "r_pred_end": 2000,
+      "c_pred_start": 1000,
+      "c_pred_end": 2000
+  }
+}
+
