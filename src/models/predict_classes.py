@@ -71,8 +71,8 @@ class PredImgRandom(PredImg):
 class SatelliteTif():
     def __init__(self, tif_path, rel_path_2_data,
                  c_channels=[0, 1, 3], sub_img_w=200, sub_img_h=200,
-                 train_window = 0.4, num_train = 100, valid_frac = 0.3,
-                 num_pred=10, r_start=0, r_end=np.inf, c_start=0, c_end=np.inf):
+                 train_window=0.4, num_train=100, valid_frac=0.3,
+                 r_start=0, r_end=np.inf, c_start=0, c_end=np.inf):
         # store tif
         self.sat_data = rasterio.open(tif_path)
         # store geometry conversion type
@@ -91,7 +91,7 @@ class SatelliteTif():
         leading_zeros = int(np.ceil(np.log10(np.max([self.sat_w,
                                                      self.sat_h]))))
         self.image_save_format = (
-            'image_{:0' + str(leading_zeros) + 'd}' + 
+            'image_{:0' + str(leading_zeros) + 'd}' +
             '_{:0' + str(leading_zeros) + 'd}')
         self.base_dir = os.getcwd() + '/' + rel_path_2_data
         self.pred_dir = self.base_dir + '/predict'
@@ -117,32 +117,44 @@ class SatelliteTif():
                                                 delta_window_start*self.sat_w,
                                                 delta_window_end*self.sat_w)
         # get random sample
-        num_train = np.max([num_train, len(poss_train_origins)])
-        self.num_train = num_train
-        r_start_train = np.random.choice(poss_train_origins[:, 0], num_train)
-        c_start_train = np.random.choice(poss_train_origins[:, 1], num_train)
-        # coordinates
-        self.train_origins = np.array(
-            [r_start_train, c_start_train]).transpose()[:num_train].astype('int')
-        # initialize a subset to self
-        self.data = np.zeros((self.img_h, self.img_w, 3))
-        # all objects
-        self.detected_objects = np.empty([0, 6])
+        max_train_num = len(poss_train_origins)
+        num_train = np.min([num_train, max_train_num])
+        self.num_all = num_train
+        self.num_valid = int(self.valid_frac * num_train)
+        self.num_train = self.num_all - self.num_valid
+        idx = np.random.choice(np.arange(max_train_num),
+                               size=self.num_all, replace=False)
+        self.training_origins = poss_train_origins[idx, :]
+        self.train_origins = self.training_origins[:self.num_train, :]
+        self.valid_origins = self.training_origins[self.num_train:, :]
 
     def build_directories(self):
         dirs2build = [self.base_dir, self.pred_dir,
-                      self.train_dir,self.valid_dir]
+                      self.train_dir, self.valid_dir]
         for a_dir in dirs2build:
+            # build dirs
             if not os.path.exists(a_dir):
                 os.makedirs(a_dir)
+                # build image dirs
+                if not a_dir == self.base_dir:
+                    image_dir = a_dir+'/images'
+                    if not os.path.exists(image_dir):
+                        os.makedirs(image_dir)
+                    # build label dirs
+                    if a_dir in [self.train_dir, self.valid_dir]:
+                        label_dir = a_dir+'/labels'
+                        if not os.path.exists(label_dir):
+                            os.makedirs(label_dir)
+
 
     def proj_lonlat_2_rc(self, lonlat):
         '''
         Description:
-            Convert lon/lat coordinates to rows and columns in the tif satellite
-            image. Uses pyproj to convert between coordinate systems
+            Convert lon/lat coordinates to rows and columns in the tif
+            satellite image. Uses pyproj to convert between coordinate systems
         Args:
-            lonlat (np.array, size=[n,2]): array of longitude (col1) and lat (col2)
+            lonlat (np.array, size=[n,2]): array of longitude
+                (col1) and lat (col2)
         Returns:
             rc (np.array shape=[n, 2]): row/columns in tif file for all
                 recorded points
@@ -202,9 +214,18 @@ class SatelliteTif():
         # get all origins
         row_origins = np.arange(start_r, end_r, self.img_h)
         col_origins = np.arange(start_c, end_c, self.img_w)
-        origin_list = np.array([(r, c) for r in row_origins for c in col_origins])
+        origin_list = np.array([(r, c) for r in row_origins
+                                for c in col_origins])
         return origin_list
 
+    def build_train_dataset():
+        self.build_dataset(self.train_origins, self.train_dir)
+
+    def build_valid_dataset():
+        self.build_dataset(self.valid_origins, self.valid_dir)
+
+    def build_pred_dataset():
+        self.build_dataset(self.pred_origins, self.pred_dir)
 
     def build_dataset(self, origins, save_dir):
         # build full array (r_start, r_end, c_start, c_end)
@@ -218,7 +239,8 @@ class SatelliteTif():
         with open(self.base_dir + name_str + '_key.txt', 'w+') as look_up_f:
             for origin in origins:
                 # set image save name
-                img_save_id = self.image_save_format.format(origin[0], origin[1])
+                img_save_id = self.image_save_format.format(origin[0],
+                                                            origin[1])
                 # get subset
                 band_data = self.get_subset(coors[ii, 0],
                                             coors[ii, 1],
