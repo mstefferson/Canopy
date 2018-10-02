@@ -3,6 +3,9 @@ import imageio
 import numpy as np
 import rasterio
 import src.models.analyze_model
+from skimage import io as skio
+import warnings
+import glob
 
 
 class PredImg():
@@ -85,8 +88,10 @@ class SatelliteTif():
         self.c_channels = c_channels
         self.sat_w = self.sat_data.width
         self.sat_h = self.sat_data.height
+        self.sat_c = self.sat_data.count
         self.img_w = sub_img_w
         self.img_h = sub_img_h
+        self.img_c = len(c_channels)
         # save directory
         leading_zeros = int(np.ceil(np.log10(np.max([self.sat_w,
                                                      self.sat_h]))))
@@ -202,6 +207,25 @@ class SatelliteTif():
         lonlat = np.array([lon, lat]).transpose()
         return lonlat
 
+    def clean_images(self, path):
+        # DANGER!!!
+        files = glob.glob(path + '/*jpg')
+        for f in files:
+            os.remove(f)
+
+    def clean_pred_images(self):
+        # DANGER!!!
+        self.clean_images(self.pred_dir + '/images')
+
+    def clean_train_images(self):
+        # DANGER!!!
+        self.clean_images(self.train_dir + '/images')
+
+    def clean_valid_images(self):
+        # DANGER!!!
+        self.clean_images(self.valid_dir + '/images')
+
+
     def build_origins(self, start_r, end_r, start_c, end_c):
         # get number of divisions
         div_w = int(np.floor(self.sat_w / self.img_w))
@@ -215,176 +239,71 @@ class SatelliteTif():
         row_origins = np.arange(start_r, end_r, self.img_h)
         col_origins = np.arange(start_c, end_c, self.img_w)
         origin_list = np.array([(r, c) for r in row_origins
-                                for c in col_origins])
+                                for c in col_origins]).astype(int)
         return origin_list
 
-    def build_train_dataset():
+    def build_train_dataset(self):
         self.build_dataset(self.train_origins, self.train_dir)
 
-    def build_valid_dataset():
+    def build_valid_dataset(self):
         self.build_dataset(self.valid_origins, self.valid_dir)
 
-    def build_pred_dataset():
+    def build_pred_dataset(self):
         self.build_dataset(self.pred_origins, self.pred_dir)
 
     def build_dataset(self, origins, save_dir):
         # build full array (r_start, r_end, c_start, c_end)
-        all_coors = np.zeros((len(origins, 4)))
+        all_coors = np.zeros((len(origins), 4)).astype(int)
+        # build all coordinat (row_start, row_end, col_start, col_end)
         all_coors[:, 0] = origins[:, 0]
-        all_coors[:, 1] = origins[:, 0] + delta
+        all_coors[:, 1] = origins[:, 0] + self.img_h
         all_coors[:, 2] = origins[:, 1]
-        all_coors[:, 3] = origins[:, 1] + delta
+        all_coors[:, 3] = origins[:, 1] + self.img_w
         # get key name from save dir
-        name_str = '/'.splirt(save_dir)[-1]
-        with open(self.base_dir + name_str + '_key.txt', 'w+') as look_up_f:
-            for origin in origins:
+        save_repo = save_dir.split('/')[-1]
+        image_path = save_dir + '/images/'
+        lookup_filename = save_dir + '/' + save_repo + '_key.txt'
+        with open(lookup_filename, 'w+') as look_up_f:
+            for (org_id, origin) in enumerate(origins):
                 # set image save name
                 img_save_id = self.image_save_format.format(origin[0],
                                                             origin[1])
                 # get subset
-                band_data = self.get_subset(coors[ii, 0],
-                                            coors[ii, 1],
-                                            coors[ii, 2],
-                                            coors[ii, 3])
+                band_data = self.get_subset(all_coors[org_id, 0],
+                                            all_coors[org_id, 1],
+                                            all_coors[org_id, 2],
+                                            all_coors[org_id, 3])
                 # update band to save based on color channels
                 # must be saved as integars from 0, 255
-                band2save = np.array(band_data, dtype=np.uint8)
+                band2save = np.array(band_data)
                 # save everything
-                img_save_name = image_save_id + '.jpg'
-                # same image
-                imageio.imwrite(save_dir + img_save_name, band2save)
-                # update lookup dict
-                look_up_dict[img_save_name] = train_coors[ii, :]
+                img_save_name = img_save_id + '.jpg'
+                # save image
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", UserWarning)
+                    skio.imsave(image_path + img_save_name, band2save)
                 # update lookup txt file
                 line2save = (img_save_name
-                             + ' ' + str(coors[ii, 0])
-                             + ' ' + str(coors[ii, 1])
-                             + ' ' + str(coors[ii, 2])
-                             + ' ' + str(coors[ii, 3])
+                             + ' ' + str(all_coors[org_id, 0])
+                             + ' ' + str(all_coors[org_id, 1])
+                             + ' ' + str(all_coors[org_id, 2])
+                             + ' ' + str(all_coors[org_id, 3])
                              + '\n')
-                look_up_f.write(line2save)
 
-    def build_test_train(sat_file, num_images, delta=200,
-                         split=0.3, c_channels=[0, 1, 3], fid_start=0):
-        '''
-        Description:
-            Builds a test/train set from random squares of a sat_file tif file
-        Args:
-            sat_file (str): path to satellite tif file
-            num_images (int): total number of images in data set
-            delta (int, optional): width/heigth of image in data set
-            split (float, optional): test/train split (frac in test)
-            c_channels (list of ints, optional): three color bands
-                to include in image. Tiff has four: r, g, b, IR
-            fid_start: initial file id to label images. e.g., image_fid.jpg
-        Returns:
-            N/A
-        Updates:
-            N/A
-        Write to file:
-            /app/data/(test,train)/images/image_*,
-            /app/data/(test,train)/images/key*: test and train image data
-                set with keys
-
-        '''
-        def save_data(sat_data, coors, num2save, num_total, path, save_str, fid):
-            '''
-            Description:
-                Nested function that actually writes the files
-            '''
-            look_up_name = 'key'
-            look_up_f = open(path + look_up_name + '.txt', 'w+')
-            look_up_dict = {}
-            for ii in np.arange(num2save):
-                # get subset
-                band_data = get_satellite_subset(sat_data,
-                                                 coors[ii, 0],
-                                                 coors[ii, 1],
-                                                 coors[ii, 2],
-                                                 coors[ii, 3])
-                # update band to save based on color channels
-                # must be saved as integars from 0, 255
-                band2save = np.array(255*band_data[:, :, c_channels],
-                                     dtype=np.uint8)
-                # save everything
-                img_save_name = save_str.format(fid+ii) + '.jpg'
-                # same image
-                imageio.imwrite(path + img_save_name, band2save)
-                # update lookup dict
-                look_up_dict[img_save_name] = train_coors[ii, :]
-                # update lookup txt file
-                line2save = (img_save_name
-                             + ' ' + str(coors[ii, 0])
-                             + ' ' + str(coors[ii, 1])
-                             + ' ' + str(coors[ii, 2])
-                             + ' ' + str(coors[ii, 3])
-                             + '\n')
                 look_up_f.write(line2save)
-            # save lookup dictionary
-            pickle.dump(look_up_dict, open(path + look_up_name + '.pkl', 'wb'))
-            # close txt file
-            look_up_f.close()
-        # build output directories if they don't exist
-        directory = '/app/data/athens/train/'
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        directory = '/app/data/athens/test/'
-        if not os.path.exists(directory):
-            os.makedirs(directory)
-        # get sat data
-        sat_data = rasterio.open(sat_file)
-        # get number of rows and columns
-        num_r = sat_data.height
-        num_c = sat_data.width
-        # find all possible subsections
-        r_min = num_r / 4
-        r_max = 3*num_r / 4
-        c_min = num_c / 4
-        c_max = 3*num_c / 4
-        # get all possible row/column starting points
-        r_start_all = np.arange(r_min, r_max, delta)
-        c_start_all = np.arange(r_min, r_max, delta)
-        # get random sample
-        r_start = np.random.choice(r_start_all, num_images)
-        c_start = np.random.choice(c_start_all, num_images)
-        # coordinates
-        start_coord = np.array(
-            [r_start, c_start]).transpose()[:num_images].astype('int')
-        # build full array (r_start, r_end, c_start, c_end)
-        all_coors = np.zeros((num_images, 4))
-        all_coors[:, 0] = start_coord[:, 0]
-        all_coors[:, 1] = start_coord[:, 0] + delta
-        all_coors[:, 2] = start_coord[:, 1]
-        all_coors[:, 3] = start_coord[:, 1] + delta
-        # split into test/train
-        all_coors = all_coors.astype('int')
-        num_test = int(np.floor(num_images * split))
-        num_train = int(num_images - num_test)
-        train_coors = all_coors[:num_train, :]
-        test_coors = all_coors[num_train:, :]
-        # set str format for save name
-        num_dec = int(np.ceil(np.log10(fid + num_total))) + 1
-        save_str = 'image_{:0' + str(num_dec) + 'd}'
-        # save train
-        train_path = '/app/data/train/images/'
-        save_data(sat_data, train_coors, num_train,
-                  num_images, train_path, save_str, fid)
-        # save test
-        test_path = '/app/data/test/images/'
-        save_data(sat_data, test_coors, num_test,
-                  num_images, test_path, save_str, fid+num_train)
 
     def divide_tif():
         print('write me')
 
     def get_subset(self, r_start, r_end, c_start, c_end):
+        data = np.zeros((self.img_h, self.img_w, self.img_c))
         for (c_id, c) in enumerate(self.c_channels):
-            self.data[:, :, c_id] = self.sat_data.read(band_num,
-                                                       window=((r_start, r_end)
-                                                               (c_start, c_end)))
+            data[:, :, c_id] = self.sat_data.read(
+                c+1, window=((r_start, r_end), (c_start, c_end)))
         # normalize
-        self.data = np.array(self.data / self.tif_norm * self.jpg_norm,
-                             dtype=np.uint8)
+        data = np.array(
+            data / self.tif_norm * self.jpg_norm).astype(int)
+        return data
 
     def pred_subset(self, r_start, r_end, c_start, c_end):
         self.data = self.get_subset(r_start, r_end, c_start, c_end)
