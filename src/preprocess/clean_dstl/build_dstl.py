@@ -32,34 +32,37 @@ def main(config):
     grid_sizes = clean_dstl.import_grid_sizes(grid_file)
     # process the image
     # ignore low contrast warning
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", UserWarning)
-        clean_dstl.process_dstl_directory(
-            dir_path=data_path + 'three_band/',
-            sub_dirs=config["dstl"]["sub_dirs"],
-            image_save_dir=save_path + 'chopped_images',
-            annotations_save_dir=save_path,
-            geojson_dir=geojson_dir,
-            grid_sizes=grid_sizes,
-            block_shape=(config["dstl"]["imag_h"],
-                         config["dstl"]["imag_w"], 3)
-        )
-    print('Processed all data')
-    # get all the bound box labels
-    df, files2delete = label_dstl.get_all_bounding(
-        config['dstl']['proc_data_rel'], config['dstl']['imag_w'],
-        config['dstl']['imag_h'])
-    print('Got all bounding boxes')
-    # get all the bound box labels
-    label_dstl.build_labels(df, files2delete, config['dstl']['imag_w'],
-                            config['dstl']['imag_h'],
-                            lab_format=config['dstl']['label_format'])
-    print('Built all labels')
-    # build val/train
-    path2data = os.getcwd() + config['dstl']['proc_data_rel']
-    label_dstl.build_val_train(path2data,
-                               val_size=config['dstl']['valid_frac'])
-    print('Move to train/val')
+    # Loop over sub_dirs in case something breaks
+    for a_dir in config["dstl"]["sub_dirs"]:
+        print('Analyzing dir:', a_dir)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            clean_dstl.process_dstl_directory(
+                dir_path=data_path + 'three_band/',
+                sub_dirs=[a_dir],
+                image_save_dir=save_path + 'chopped_images',
+                annotations_save_dir=save_path,
+                geojson_dir=geojson_dir,
+                grid_sizes=grid_sizes,
+                block_shape=(config["dstl"]["imag_h"],
+                             config["dstl"]["imag_w"], 3)
+            )
+        print('Processed all data')
+        # get all the bound box labels
+        df, files2delete = label_dstl.get_all_bounding(
+            config['dstl']['proc_data_rel'], config['dstl']['imag_w'],
+            config['dstl']['imag_h'])
+        print('Got all bounding boxes')
+        # get all the bound box labels
+        label_dstl.build_labels(df, files2delete, config['dstl']['imag_w'],
+                                config['dstl']['imag_h'],
+                                lab_format=config['dstl']['label_format'])
+        print('Built all labels')
+        # build val/train
+        path2data = os.getcwd() + config['dstl']['proc_data_rel']
+        label_dstl.build_val_train(path2data,
+                                   val_size=config['dstl']['valid_frac'])
+        print('Move to train/val')
 
 
 if __name__ == '__main__':
