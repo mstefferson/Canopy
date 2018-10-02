@@ -1,9 +1,10 @@
 import sys
 import argparse
-import src.models.predict_classes
 import json
 import logging
 import numpy as np
+sys.path.insert(0, "src")
+import sat_class
 
 
 def main(config):
@@ -39,7 +40,7 @@ def main(config):
     logger.addHandler(ch)
     logger.addHandler(fh)
     # build the sat_obj
-    sat_master = src.models.predict_classes.SatelliteTif(
+    sat_master = sat_class.SatelliteTif(
         tif_file=config["sat_info"]["tif_file"],
         rel_path_2_data=config["sat_info"]["processed_data_path"],
         rel_path_2_output=config["sat_info"]["output_path"],
