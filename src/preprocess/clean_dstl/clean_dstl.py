@@ -1,8 +1,6 @@
 """This script handles pulling in the data from the kaggle competition
 from DSTL, cleaning it, and saving it in a format that's
-appropriate to be read in by the
-keras-retinanet model
-
+appropriate to be read in by the keras-retinanet model 
 
 Warning
 -------
@@ -34,6 +32,8 @@ import data_utils
 
 MAP_TO_LOCAL_LABELS = {
     'MASTS_RADIO_TOWER': None,
+    'BRIDGE': None,
+    'AQUATIC_SMALL': None,
     'FLAGPOLE': None,
     'PYLONS': None,
     'EXTRACTION_MINE': None,

@@ -1,6 +1,7 @@
 import clean_dstl
 import label_dstl
 import argparse
+import logging
 import json
 import os
 import warnings
@@ -21,6 +22,23 @@ def main(config):
     Writes to file:
         Writes /path/2/processed/data/(train, val)/(images, labels)
     '''
+    # set-up logger
+    logger = logging.getLogger('dstl')
+    logger.setLevel(logging.DEBUG)
+    # create file handler which logs even debug messages
+    fh = logging.FileHandler('dstl.log', mode='w')
+    fh.setLevel(logging.INFO)
+    # create console handler with a higher log level
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.ERROR)
+    # create formatter and add it to the handlers
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    ch.setFormatter(formatter)
+    fh.setFormatter(formatter)
+    # add the handlers to logger
+    logger.addHandler(ch)
+    logger.addHandler(fh)
     # make dirs
     if not os.path.exists(os.getcwd() + config["dstl"]["proc_data_rel"]):
         os.makedirs(os.getcwd() + config["dstl"]["proc_data_rel"])
@@ -34,7 +52,7 @@ def main(config):
     # ignore low contrast warning
     # Loop over sub_dirs in case something breaks
     for a_dir in config["dstl"]["sub_dirs"]:
-        print('Analyzing dir:', a_dir)
+        logger.info('Analyzing dir ' + a_dir)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)
             clean_dstl.process_dstl_directory(
@@ -47,22 +65,22 @@ def main(config):
                 block_shape=(config["dstl"]["imag_h"],
                              config["dstl"]["imag_w"], 3)
             )
-        print('Processed all data')
+        logger.info('Processed all data')
         # get all the bound box labels
         df, files2delete = label_dstl.get_all_bounding(
             config['dstl']['proc_data_rel'], config['dstl']['imag_w'],
             config['dstl']['imag_h'])
-        print('Got all bounding boxes')
+        logger.info('Got all bounding boxes')
         # get all the bound box labels
         label_dstl.build_labels(df, files2delete, config['dstl']['imag_w'],
                                 config['dstl']['imag_h'],
                                 lab_format=config['dstl']['label_format'])
-        print('Built all labels')
+        logger.info('Built all labels')
         # build val/train
         path2data = os.getcwd() + config['dstl']['proc_data_rel']
         label_dstl.build_val_train(path2data,
                                    val_size=config['dstl']['valid_frac'])
-        print('Move to train/val')
+        logger.info('Move to train/val')
 
 
 if __name__ == '__main__':
