@@ -7,6 +7,7 @@ from skimage import io as skio
 import warnings
 import glob
 import pandas as pd
+import pyproj
 
 
 class PredImg():
@@ -144,10 +145,11 @@ class SatelliteTif():
         files = glob.glob(self.pred_collect_dir + '/*csv')
         df_columns = ['fname_full', 'fname', 'label', 'imag_w', 'imag_h',
                       'x', 'y', 'w', 'h', 'conf',
+                      'w_pixel', 'h_pixel', 'w_meter', 'h_meter',
                       'r_origin', 'c_origin', 'r_local', 'c_local', 'r_global',
-                      'c_global']
+                      'c_global', 'lon', 'lat']
         file_cols = ['label', 'imag_w', 'imag_h', 'x', 'y', 'w', 'h', 'conf']
-        self.df_all = pd.DataFrame(index=np.arange(0), columns=df_columns)
+        self.obj_dect_df = pd.DataFrame(index=np.arange(0), columns=df_columns)
         for a_file in files:
             # get r,c from file
             file_id = a_file.split('/')[-1]
@@ -164,15 +166,26 @@ class SatelliteTif():
             # calculate the rest
             df_sub['r_origin'] = r_org
             df_sub['c_origin'] = c_org
+            df_sub['w_pixel'] = df_sub['imag_w'] * df_sub['w']
+            df_sub['h_pixel'] = df_sub['imag_h'] * df_sub['h']
+            # convert width to meter (1 pixel = 0.3 meter)
+            df_sub['w_meter'] = 0.3 * df_sub['w_pixel']
+            df_sub['h_meter'] = 0.3 * df_sub['h_pixel']
+            # convert scaled distances to row/col
+            df_sub['c_origin'] = c_org
             df_sub['r_local'] = (df_sub['y'] * df_sub['imag_h']).astype(int)
             df_sub['c_local'] = (df_sub['x'] * df_sub['imag_w']).astype(int)
             df_sub['r_global'] = df_sub['r_local'] + df_sub['r_origin']
             df_sub['c_global'] = df_sub['c_local'] + df_sub['c_origin']
+            # calc latlon
+            df_sub[['lon', 'lat']] = self.proj_rc_2_lonlat(
+                np.array(df_sub[['r_global', 'c_global']]))
             # append it
-            self.df_all = self.df_all.append(df_sub, ignore_index=True)
+            self.obj_dect_df = self.obj_dect_df.append(df_sub,
+                                                       ignore_index=True)
             # save it
             if save_name is not None:
-                self.df_all.to_csv(self.output_dir + '/' + save_name)
+                self.obj_dect_df.to_csv(self.output_dir + '/' + save_name)
 
     def build_directories(self):
         dirs2build = [self.base_dir, self.pred_dir,
@@ -193,6 +206,35 @@ class SatelliteTif():
                         if not os.path.exists(label_dir):
                             os.makedirs(label_dir)
 
+    def proj_lonlat_2_xy(self, lonlat):
+        '''
+        Description:
+            Convert lon/lat coordinates to rows and columns in the tif
+                satellite image. Uses pyproj to convert between coordinate
+                systems
+        Args:
+            lon (float): longitude
+            lat (float): latitude
+            dataset (rasterio.io.DatasetReader): Gdal data structure from
+                opening a tif, dataset = rasterio.open('...')
+        Returns:
+            rc (np.array shape=[n, 2]): row/columns in tif file for all
+                recorded points
+        Updates:
+            N/A
+        Write to file:
+            N/A
+        '''
+        # input lat/lon
+        in_proj = pyproj.Proj(init='epsg:4326')
+        # output based on crs of tif/shp
+        out_proj = pyproj.Proj(self.crs)
+        # transform lat/lon to xy
+        x, y = pyproj.transform(in_proj, out_proj, lonlat[:, 0], lonlat[:, 1])
+        # convert rows and columns to xy map project
+        xy = np.array([x, y]).transpose()
+        return xy
+
     def proj_lonlat_2_rc(self, lonlat):
         '''
         Description:
@@ -209,17 +251,38 @@ class SatelliteTif():
         Write to file:
             N/A
         '''
-        # input lat/lon
-        in_proj = pyproj.Proj(init=self.lonlat_proj)
-        # output based on crs of tif/shp
-        out_proj = pyproj.Proj(dataset.crs)
         # transform lat/lon to xy
-        x, y = pyproj.transform(in_proj, out_proj, lonlat[:, 0], lonlat[:, 1])
-        # convert rows and columns to xy map project
-        (r, c) = rasterio.transform.rowcol(dataset.transform, x, y)
+        xy = self.proj_lonlat_2_xy(lonlat)
+        # convert rows and columns to xy map project rows->y, col->x
+        (r, c) = rasterio.transform.rowcol(
+            self.sat_data.transform, xy[:, 0], xy[:, 1])
         # store it in numpy array
         rc = np.array([r, c]).transpose()
         return rc
+
+    def proj_rc_2_xy(self, rc):
+        '''
+        Description:
+            Convert row/columns of tif dataset to lat/lon.
+            Uses pyproj to convert between coordinate systems
+        Args:
+            rc (np.array shape=[n, 2]): row/columns in tif file for all
+                recorded points
+        Returns:
+            lonlat (np.array, size=[n,2]): array of longitude (col1)
+                and lat (col2)
+        Updates:
+            N/A
+        Write to file:
+            N/A
+        '''
+        # convert rows and columns to xy map project
+        # in rasterio row, col -> (x,y)
+        (x, y) = rasterio.transform.xy(
+            self.sat_data.transform, rc[:, 0], rc[:, 1])
+        # store it in numpy array
+        xy = np.array([x, y]).transpose()
+        return xy
 
     def proj_rc_2_lonlat(self, rc):
         '''
@@ -238,13 +301,13 @@ class SatelliteTif():
             N/A
         '''
         # convert rows and columns to xy map project
-        (x, y) = rasterio.transform.xy(dataset.transform, rc[:, 0], rc[:, 1])
+        xy = self.proj_rc_2_xy(rc)
         # input based on crs of tif/shp
         in_proj = pyproj.Proj(self.crs)
         # output lat/lon
         out_proj = pyproj.Proj(init=self.lonlat_proj)
         # transform xy to lat/lon
-        lon, lat = pyproj.transform(in_proj, out_proj, x, y)
+        lon, lat = pyproj.transform(in_proj, out_proj, xy[:, 0], xy[:, 1])
         # store it in numpy array
         lonlat = np.array([lon, lat]).transpose()
         return lonlat
