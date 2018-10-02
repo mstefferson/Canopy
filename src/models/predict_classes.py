@@ -6,6 +6,7 @@ import src.models.analyze_model
 from skimage import io as skio
 import warnings
 import glob
+import pandas as pd
 
 
 class PredImg():
@@ -72,7 +73,7 @@ class PredImgRandom(PredImg):
 
 
 class SatelliteTif():
-    def __init__(self, tif_path, rel_path_2_data,
+    def __init__(self, tif_path, rel_path_2_data, rel_path_2_output,
                  c_channels=[0, 1, 3], sub_img_w=200, sub_img_h=200,
                  train_window=0.4, num_train=100, valid_frac=0.3,
                  r_start=0, r_end=np.inf, c_start=0, c_end=np.inf):
@@ -95,6 +96,8 @@ class SatelliteTif():
         # set up save str
         leading_zeros = int(np.ceil(np.log10(np.max([self.sat_w,
                                                      self.sat_h]))))
+        self.classes = {'0': 'trees'}
+        self.inv_classes = {'trees': 0}
         self.image_save_format = (
             'image_{:0' + str(leading_zeros) + 'd}' +
             '_{:0' + str(leading_zeros) + 'd}')
@@ -104,6 +107,7 @@ class SatelliteTif():
         self.pred_collect_dir = self.pred_dir + '/bb_info'
         self.train_dir = self.base_dir + '/train'
         self.valid_dir = self.base_dir + '/valid'
+        self.output_dir = os.getcwd() + '/' + rel_path_2_output
         self.build_directories()
         # set prediction class and train params
         self.valid_frac = valid_frac
@@ -135,21 +139,51 @@ class SatelliteTif():
         self.train_origins = self.training_origins[:self.num_train, :]
         self.valid_origins = self.training_origins[self.num_train:, :]
 
-    def collect_outputs(self):
+    def collect_outputs(self, save_name=None):
         # build a list of all bounding boxes
-        files = glob.glob(self.pred_collect_dir + '/*txt')
+        files = glob.glob(self.pred_collect_dir + '/*csv')
+        df_columns = ['fname_full', 'fname', 'label', 'imag_w', 'imag_h',
+                      'x', 'y', 'w', 'h', 'conf',
+                      'r_origin', 'c_origin', 'r_local', 'c_local', 'r_global',
+                      'c_global']
+        file_cols = ['label', 'imag_w', 'imag_h', 'x', 'y', 'w', 'h', 'conf']
+        self.df_all = pd.DataFrame(index=np.arange(0), columns=df_columns)
         for a_file in files:
-            print(a_file)
+            # get r,c from file
+            file_id = a_file.split('/')[-1]
+            (r_org, c_org) = map(int, file_id[:-4].split('_')[-2:])
+            # set up df
+            df_temp = pd.read_csv(a_file)
+            num_rows = len(df_temp)
+            # build a temp df of the correct shape
+            df_sub = pd.DataFrame(index=np.arange(num_rows),
+                                  columns=df_columns)
+            df_sub[file_cols] = df_temp[file_cols]
+            df_sub['fname_full'] = a_file
+            df_sub['fname'] = a_file.split('/')[-1]
+            # calculate the rest
+            df_sub['r_origin'] = r_org
+            df_sub['c_origin'] = c_org
+            df_sub['r_local'] = (df_sub['y'] * df_sub['imag_h']).astype(int)
+            df_sub['c_local'] = (df_sub['x'] * df_sub['imag_w']).astype(int)
+            df_sub['r_global'] = df_sub['r_local'] + df_sub['r_origin']
+            df_sub['c_global'] = df_sub['c_local'] + df_sub['c_origin']
+            # append it
+            self.df_all = self.df_all.append(df_sub, ignore_index=True)
+            # save it
+            if save_name is not None:
+                self.df_all.to_csv(self.output_dir + '/' + save_name)
 
     def build_directories(self):
         dirs2build = [self.base_dir, self.pred_dir,
-                      self.train_dir, self.valid_dir]
+                      self.train_dir, self.valid_dir,
+                      self.output_dir]
         for a_dir in dirs2build:
             # build dirs
             if not os.path.exists(a_dir):
                 os.makedirs(a_dir)
                 # build image dirs
-                if not a_dir == self.base_dir:
+                if a_dir not in [self.base_dir, self.output_dir]:
                     image_dir = a_dir+'/images'
                     if not os.path.exists(image_dir):
                         os.makedirs(image_dir)
@@ -158,7 +192,6 @@ class SatelliteTif():
                         label_dir = a_dir+'/labels'
                         if not os.path.exists(label_dir):
                             os.makedirs(label_dir)
-
 
     def proj_lonlat_2_rc(self, lonlat):
         '''
@@ -197,7 +230,8 @@ class SatelliteTif():
             rc (np.array shape=[n, 2]): row/columns in tif file for all
                 recorded points
         Returns:
-            lonlat (np.array, size=[n,2]): array of longitude (col1) and lat (col2)
+            lonlat (np.array, size=[n,2]): array of longitude (col1)
+                and lat (col2)
         Updates:
             N/A
         Write to file:
@@ -232,7 +266,6 @@ class SatelliteTif():
     def clean_valid_images(self):
         # DANGER!!!
         self.clean_images(self.valid_dir + '/images')
-
 
     def build_origins(self, start_r, end_r, start_c, end_c):
         # set start and end to start/end on a division point
