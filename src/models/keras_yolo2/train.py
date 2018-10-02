@@ -49,11 +49,14 @@ def main(args):
     # parse annotations of the validation set,
     # if any, otherwise split the training set
     if os.path.exists(valid_annot_folder):
+        print('Using validation set:', valid_annot_folder)
         valid_imgs, valid_labels = (
             parse_annotation(valid_annot_folder,
                              valid_image_folder,
                              config['model']['labels']))
     else:
+        print('Cannot find validation:', valid_annot_folder)
+        print('Using training set')
         train_valid_split = int(0.8*len(train_imgs))
         np.random.shuffle(train_imgs)
         valid_imgs = train_imgs[train_valid_split:]

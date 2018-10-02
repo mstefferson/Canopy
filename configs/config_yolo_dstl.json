@@ -9,14 +9,14 @@
     },
 
     "train": {
-        "train_image_folder":   "data/processed/athens/train/images/",
-        "train_annot_folder":   "data/processed/athens/train/labels/",     
-        "train_times":          100,
+        "train_image_folder":   "data/processed/dstl/train/images/",
+        "train_annot_folder":   "data/processed/dstl/train/labels/",     
+        "train_times":          1,
         "pretrained_weights":   "",
         "batch_size":           16,
         "learning_rate":        1e-4,
-        "nb_epochs":            100,
-        "warmup_epochs":        1,
+        "nb_epochs":            50,
+        "warmup_epochs":        5,
 
         "object_scale":         5.0 ,
         "no_object_scale":      1.0,
@@ -28,8 +28,8 @@
     },
 
     "valid": {
-        "valid_image_folder":   "data/processed/athens/train/images/",
-        "valid_annot_folder":   "data/processed/athens/train/labels/",     
+        "valid_image_folder":   "data/processed/dstl/val/images/",
+        "valid_annot_folder":   "data/processed/dstl/val/labels/",     
         "valid_times":          1
     },
 
@@ -38,8 +38,8 @@
         "save_detect": true,
         "save_bb": true,
         "sat_tif":   "data/raw/athens/athens_satellite.tif",
-        "image_path":   "data/processed/athens/train/images/",
-        "bb_folder":   "data/processed/athens/train/bb_info/",
-        "detect_folder":   "data/processed/athens/train/images_detected/"
+        "image_path":   "data/processed/dstl/unlabeled/6160_1_4__7_1.png",
+        "bb_folder":   "data/processed/dstl/bb_info/",
+        "detect_folder":   "data/processed/dstl/images_detected/"
     }
 }
