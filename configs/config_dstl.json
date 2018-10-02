@@ -6,7 +6,8 @@
         "proc_data_rel": "/data/processed/dstl/",
         "label_format": "voc",
         "valid_frac": 0.3,
-        "sub_dirs": ["6010"]
+        "sub_dirs": ["6010", "6040", "6060",
+                     "6070", "6090", "6100", "6110", "6120", 
+                     "6140", "6150", "6160", "6170"]
     }
 }
-

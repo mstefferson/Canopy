@@ -122,7 +122,7 @@ def get_all_bounding(process_path, imag_w, imag_h):
     # drop nans()
     df.dropna(axis=0, inplace=True)
     # set all the labels, after rerunning set just to trees
-    label_dir = {'trees': 0, 'buildings': 1, 'animals': 2}
+    label_dir = {'trees': 0}
     df['label'] = df.label_str.apply(lambda x: label_dir[x]).astype('int')
     df['label'] = df['label'].astype('int')
     # get width and height
@@ -162,16 +162,26 @@ def build_labels(df, unlabelfiles, imag_w, imag_h, lab_format='voc'):
         /base/path/data/processed/(images, labels)
     '''
     # move all unlabled data
-    if len(unlabelfiles) > 0:
-        base_dir = '/'.join(unlabelfiles[0].split('/')[:-2])
+    num_unlabeled = len(unlabelfiles)
+    num_labeled = len(df)
+    print('{} unlabeled files...{} labeled files'.format(
+        num_unlabeled, num_labeled))
+    if num_unlabeled > 0:
+        fullpath = unlabelfiles[0]
+        base_dir = '/'.join(fullpath.split('/')[:-2])
         move_dir = base_dir + '/unlabeled/'
+        chopped_dir = '/'.join(fullpath.split('/')[:-1])
+        # make dir
         if not os.path.exists(move_dir):
             os.makedirs(move_dir)
-            for f_name in unlabelfiles:
-                if os.path.exists(f_name):
-                    shutil.move(f_name, move_dir)
+        # move it
+        for f_name in unlabelfiles:
+            if os.path.exists(f_name):
+                shutil.move(f_name, move_dir)
+    else:
+        print('No unlabeled data')
     # move labeled data
-    if len(df) > 0:
+    if num_labeled > 0:
         # get base directory
         fullpath = df.iloc[0, 0]
         base_dir = '/'.join(fullpath.split('/')[:-2])
@@ -217,14 +227,14 @@ def build_labels(df, unlabelfiles, imag_w, imag_h, lab_format='voc'):
                              'Must be voc or yolo')
                 raise RuntimeError(error_str)
             os.rename(f_name, f_img)
-        # remove chopped_files directory
-        if not os.listdir(chopped_dir):
-            print('Chopped empty, deleting')
-            os.rmdir(chopped_dir)
-        else:
-            print('Chopped not empty, not deleting')
     else:
         print('No labeled data')
+    # remove chopped_files directory
+    if not os.listdir(chopped_dir):
+        print('Chopped empty, deleting')
+        os.rmdir(chopped_dir)
+    else:
+        print('Chopped not empty, not deleting')
 
 
 def build_val_train(path2data, val_size=0.3):

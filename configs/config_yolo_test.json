@@ -2,10 +2,10 @@
     "model" : {
         "backend":              "FullYolo",
         "input_size":           200,
-        "anchors":              [0.00, 0.00, 0.33, 0.34, 0.43, 1.02, 0.60, 0.53, 1.17, 0.89],
+        "anchors":              [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
         "max_box_per_image":    40,        
         "labels":               ["trees"],
-        "freeze_backend":      true
+        "freeze_backend":       false
     },
 
     "train": {
@@ -15,7 +15,7 @@
         "pretrained_weights":   "",
         "batch_size":           16,
         "learning_rate":        1e-4,
-        "nb_epochs":            3,
+        "nb_epochs":            10,
         "warmup_epochs":        1,
 
         "object_scale":         5.0 ,
@@ -29,7 +29,7 @@
 
     "valid": {
         "valid_image_folder":   "data/processed/athens/valid/images/",
-        "valid_annot_folder":   "data/processed/athens/valid/labels/",
+        "valid_annot_folder":   "data/processed/athens/valid/labels/",     
         "valid_times":          1
     }
 }
