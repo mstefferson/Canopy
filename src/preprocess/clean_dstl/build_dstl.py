@@ -66,7 +66,7 @@ if __name__ == '__main__':
     '''
     Executeable:
     python src/preprocess/clean_dstl/build_dstl_dataset.py /
-        configs/config_dstl.json
+        -c configs/config_dstl.json
     '''
     # parse args
     parser = argparse.ArgumentParser()

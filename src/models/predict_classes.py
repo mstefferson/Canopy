@@ -74,25 +74,27 @@ class PredImgRandom(PredImg):
 
 
 class SatelliteTif():
-    def __init__(self, tif_path, rel_path_2_data, rel_path_2_output,
-                 c_channels=[0, 1, 3], sub_img_w=200, sub_img_h=200,
+    def __init__(self, tif_file, rel_path_2_data, rel_path_2_output,
+                 c_channels=[0, 1, 3], imag_w=200, imag_h=200,
                  train_window=0.4, num_train=100, valid_frac=0.3,
-                 r_start=0, r_end=np.inf, c_start=0, c_end=np.inf):
+                 r_pred_start=0, r_pred_end=np.inf,
+                 c_pred_start=0, c_pred_end=np.inf):
         # store tif
-        self.sat_data = rasterio.open(tif_path)
+        self.tif_file = tif_file
+        self.sat_data = rasterio.open(tif_file)
         # store geometry conversion type
         self.crs = self.sat_data.crs
         # lat/lon project string
         self.lonlat_proj = 'epsg:4326'
         # set geometry
         self.tif_norm = 65535.
-        self.jpg_norm = 355
+        self.jpg_norm = 255
         self.c_channels = c_channels
         self.sat_w = self.sat_data.width
         self.sat_h = self.sat_data.height
         self.sat_c = self.sat_data.count
-        self.img_w = sub_img_w
-        self.img_h = sub_img_h
+        self.img_w = imag_w
+        self.img_h = imag_h
         self.img_c = len(c_channels)
         # set up save str
         leading_zeros = int(np.ceil(np.log10(np.max([self.sat_w,
@@ -113,14 +115,14 @@ class SatelliteTif():
         # set prediction class and train params
         self.valid_frac = valid_frac
         # get orgins for each subset
-        self.r_end = np.min([r_end, self.sat_h])
-        self.r_start = r_start
-        self.c_end = np.min([c_end, self.sat_w])
-        self.c_start = c_start
-        self.pred_origins = self.build_origins(self.r_start,
-                                               self.r_end,
-                                               self.c_start,
-                                               self.c_end)
+        self.r_pred_end = np.min([r_pred_end, self.sat_h])
+        self.r_pred_start = r_pred_start
+        self.c_pred_end = np.min([c_pred_end, self.sat_w])
+        self.c_pred_start = c_pred_start
+        self.pred_origins = self.build_origins(self.r_pred_start,
+                                               self.r_pred_end,
+                                               self.c_pred_start,
+                                               self.c_pred_end)
         # got training, sample from some fraction of the center of image
         delta_window_start = (1-train_window) / 2
         delta_window_end = 1 - (1-train_window) / 2
