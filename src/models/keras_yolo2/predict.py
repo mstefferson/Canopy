@@ -92,43 +92,53 @@ def main(args):
     '''
     # set configs
     config_path = args.conf
-    weights_path = args.weights
-    image_path = args.input
-    save_detect = args.detect
-    write_file = args.bound
     # build config
     with open(config_path) as config_buffer:
         config = json.load(config_buffer)
+    # get params
+    weights_path = config["predict"]["weights"]
+    save_detect = config["predict"]["save_detect"]
+    save_bb = config["predict"]["save_bb"]
     # build model
     yolo_model = build_model(config, weights_path)
-    # load image and predict bounding box
-    image = cv2.imread(image_path)
-    # predict to get boxes
-    box_df, bboxes = predict_bounding_box(yolo_model, image)
-    # get base directory for writing files
-    path_info_list = image_path.split('/')
-    base_dir = '/'.join(path_info_list[:-2])
-    file_name = path_info_list[-1]
-    file_id = file_name[:-4]
-    if write_file:
-        # build file names and directories
-        result_dir = '/bb_info/'
-        path2write = base_dir + result_dir
-        if not os.path.exists(path2write):
-            os.makedirs(path2write)
-        filename = path2write + file_id + '.csv'
-        box_df.to_csv(filename, index=False)
+    # get all the files you want to predict on
+    pred_path = config["predict"]["image_path"]
+    # pred path can be a folder or image. Grab files accordingly
+    if os.path.isfile(pred_path):
+        files_2_pred = [pred_path]
+    else:
+        files_2_pred = glob.glob(pred_path + '*')
+    print('Predicting objects on files', files_2_pred)
+    # loop over all files
+    for image_path in files_2_pred:
+        # load image and predict bounding box
+        image = cv2.imread(image_path)
+        # predict to get boxes
+        box_df, bboxes = predict_bounding_box(yolo_model, image)
+        # get base directory for writing files
+        path_info_list = image_path.split('/')
+        base_dir = '/'.join(path_info_list[:-2])
+        file_name = path_info_list[-1]
+        file_id = file_name[:-4]
+        if save_bb:
+            # build file names and directories
+            result_dir = config["predict"]["bb_folder"]
+            path2write = base_dir + result_dir
+            if not os.path.exists(path2write):
+                os.makedirs(path2write)
+            filename = path2write + file_id + '.csv'
+            box_df.to_csv(filename, index=False)
 
-    if save_detect:
-        # build file names and directories
-        result_dir = '/images_detected/'
-        path2write = base_dir + result_dir
-        filename = (path2write + file_id +
-                    '_detected' + file_name[-4:])
-        if not os.path.exists(path2write):
-            os.makedirs(path2write)
-        image = draw_boxes(image, bboxes, config['model']['labels'])
-        cv2.imwrite(filename, image)
+        if save_detect:
+            # build file names and directories
+            result_dir = config["predict"]["detect_folder"]
+            path2write = base_dir + result_dir
+            filename = (path2write + file_id +
+                        '_detected' + file_name[-4:])
+            if not os.path.exists(path2write):
+                os.makedirs(path2write)
+            image = draw_boxes(image, bboxes, config['model']['labels'])
+            cv2.imwrite(filename, image)
 
 
 if __name__ == '__main__':

@@ -1,7 +1,7 @@
 {
     "model" : {
         "backend":              "FullYolo",
-        "input_size":           200,
+        "input_size":           400,
         "anchors":              [0.00, 0.00, 0.33, 0.34, 0.43, 1.02, 0.60, 0.53, 1.17, 0.89],
         "max_box_per_image":    40,        
         "labels":               ["trees"],
@@ -15,8 +15,8 @@
         "pretrained_weights":   "",
         "batch_size":           16,
         "learning_rate":        1e-4,
-        "nb_epochs":            3,
-        "warmup_epochs":        1,
+        "nb_epochs":            1,
+        "warmup_epochs":        0,
 
         "object_scale":         5.0 ,
         "no_object_scale":      1.0,
@@ -28,8 +28,17 @@
     },
 
     "valid": {
-        "valid_image_folder":   "data/processed/athens/valid/images/",
-        "valid_annot_folder":   "data/processed/athens/valid/labels/",
+        "valid_image_folder":   "data/processed/athens/test/images/",
+        "valid_annot_folder":   "data/processed/athens/test/labels/",     
         "valid_times":          1
+    },
+
+    "predict": {
+        "weights": "model_weights/full_yolo_tree.h5",
+        "save_detect": true,
+        "save_bb": true,
+        "image_path":   "data/processed/athens/predict/images/",
+        "bb_folder":   "data/processed/athens/predict/bb_info/",
+        "detect_folder":   "data/processed/athens/predict/images_detected/"
     }
 }
