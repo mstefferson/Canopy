@@ -92,14 +92,16 @@ class SatelliteTif():
         self.img_w = sub_img_w
         self.img_h = sub_img_h
         self.img_c = len(c_channels)
-        # save directory
+        # set up save str
         leading_zeros = int(np.ceil(np.log10(np.max([self.sat_w,
                                                      self.sat_h]))))
         self.image_save_format = (
             'image_{:0' + str(leading_zeros) + 'd}' +
             '_{:0' + str(leading_zeros) + 'd}')
+        # store all directories
         self.base_dir = os.getcwd() + '/' + rel_path_2_data
         self.pred_dir = self.base_dir + '/predict'
+        self.pred_collect_dir = self.pred_dir + '/bb_info'
         self.train_dir = self.base_dir + '/train'
         self.valid_dir = self.base_dir + '/valid'
         self.build_directories()
@@ -132,6 +134,12 @@ class SatelliteTif():
         self.training_origins = poss_train_origins[idx, :]
         self.train_origins = self.training_origins[:self.num_train, :]
         self.valid_origins = self.training_origins[self.num_train:, :]
+
+    def collect_outputs(self):
+        # build a list of all bounding boxes
+        files = glob.glob(self.pred_collect_dir + '/*txt')
+        for a_file in files:
+            print(a_file)
 
     def build_directories(self):
         dirs2build = [self.base_dir, self.pred_dir,
@@ -227,14 +235,11 @@ class SatelliteTif():
 
 
     def build_origins(self, start_r, end_r, start_c, end_c):
-        # get number of divisions
-        div_w = int(np.floor(self.sat_w / self.img_w))
-        div_h = int(np.floor(self.sat_h / self.img_h))
         # set start and end to start/end on a division point
-        start_c = np.floor(start_c/div_w) * div_w
-        end_c = np.floor(end_c/div_w) * div_w
-        start_r = np.floor(start_r/div_h) * div_w
-        end_r = np.floor(end_r/div_h) * div_w
+        start_c = np.floor(start_c/self.img_w) * self.img_w
+        end_c = np.floor(end_c/self.img_w) * self.img_w
+        start_r = np.floor(start_r/self.img_h) * self.img_h
+        end_r = np.floor(end_r/self.img_h) * self.img_h
         # get all origins
         row_origins = np.arange(start_r, end_r, self.img_h)
         col_origins = np.arange(start_c, end_c, self.img_w)
@@ -273,27 +278,28 @@ class SatelliteTif():
                                             all_coors[org_id, 1],
                                             all_coors[org_id, 2],
                                             all_coors[org_id, 3])
-                # update band to save based on color channels
-                # must be saved as integars from 0, 255
-                band2save = np.array(band_data)
-                # save everything
-                img_save_name = img_save_id + '.jpg'
-                # save image
-                with warnings.catch_warnings():
-                    warnings.simplefilter("ignore", UserWarning)
-                    skio.imsave(image_path + img_save_name, band2save)
-                # update lookup txt file
-                line2save = (img_save_name
-                             + ' ' + str(all_coors[org_id, 0])
-                             + ' ' + str(all_coors[org_id, 1])
-                             + ' ' + str(all_coors[org_id, 2])
-                             + ' ' + str(all_coors[org_id, 3])
-                             + '\n')
+                # don't save it if it's blank
+                if np.all(band_data == np.zeros((self.img_h,
+                                                 self.img_w,
+                                                 self.img_c))):
+                    pass
+                else:
+                    # update band to save based on color channels
+                    # must be saved as integars from 0, 255
+                    band2save = np.array(band_data).astype('uint8')
+                    # save everything
+                    img_save_name = img_save_id + '.jpg'
+                    # save image
+                    imageio.imwrite(image_path + img_save_name, band2save)
+                    # update lookup txt file
+                    line2save = (img_save_name
+                                 + ' ' + str(all_coors[org_id, 0])
+                                 + ' ' + str(all_coors[org_id, 1])
+                                 + ' ' + str(all_coors[org_id, 2])
+                                 + ' ' + str(all_coors[org_id, 3])
+                                 + '\n')
 
-                look_up_f.write(line2save)
-
-    def divide_tif():
-        print('write me')
+                    look_up_f.write(line2save)
 
     def get_subset(self, r_start, r_end, c_start, c_end):
         data = np.zeros((self.img_h, self.img_w, self.img_c))
@@ -304,73 +310,3 @@ class SatelliteTif():
         data = np.array(
             data / self.tif_norm * self.jpg_norm).astype(int)
         return data
-
-    def pred_subset(self, r_start, r_end, c_start, c_end):
-        self.data = self.get_subset(r_start, r_end, c_start, c_end)
-        # set up prediction object
-        self.pred_class(origin_r=r_start, origin_c=c_start)
-        boxes = self.pred_class.pred_boxes(self.data)
-        self.pred_class.boxes_in_orig()
-        return self.pred_class.boxes_global
-
-    def pred_all(self):
-        for origin in self.origin_list:
-            boxes = pred_subset(sat_data,
-                                origin[0], origin[0]+self.img_h,
-                                origin[1], origin[1]+self.img_w)
-            self.boxes_global = np.append(self.boxes_global, boxes)
-
-# def pred_tiff(sat_file,  r_start=0,
-              # r_end=np.inf, c_start=0, c_end=np.inf,
-              # image_w=200, image_h=200):
-    # # get data
-    # sat_data = rasterio.open(sat_file)
-    # sat_width = sat_data.width
-    # sat_height = sat_data.height
-    # scale_image = [image_h, image_w]
-    # # get orgins for each subset
-    # r_end = np.min([r_end, sat_data.height])
-    # c_end = np.min([c_end, sat_data.width])
-    # # get orgins
-    # origins_r, origins_c = divide_tiff(sat_width, sat_height,
-                                       # image_w=200, image_h=200)
-    # origins_r = origins_r[(origins_r > r_start) &
-                          # (origins_r < r_end)].astype(int)
-    # origins_c = origins_c[(origins_c > c_start) &
-                          # (origins_c < c_end)].astype(int)
-    # origin_list = [(r, c) for r in origins_r for c in origins_c]
-    # print('sat file ({}x{})'.format(sat_height, sat_width))
-    # print('Number of origins', len(origin_list))
-    # counter = 0
-    # # keep a list of all located trees
-    # tree_dict_info = []
-    # tree_info = np.empty((0, 4), int)
-    # for origin in origin_list:
-        # pred = pred_subset(sat_data,
-                           # origin[0], origin[0]+image_h,
-                           # origin[1], origin[1]+image_w)
-        # # make a list of all located trees
-        # pred_dict = {}
-        # pred_dict['origin'] = origin
-        # pred_dict['size'] = scale_image
-        # pred_dict['local'] = pred
-        # # put local prediction into global image
-        # if pred is not None:
-            # # convert to global
-            # pred_global = np.ones_like(pred)
-            # pred_global[:, 0] = (pred[:, 0] * scale_image[0]) + origin[0]
-            # pred_global[:, 1] = (pred[:, 1] * scale_image[1]) + origin[1]
-            # pred_global[:, 2] = (pred[:, 2] * scale_image[0])
-            # pred_global[:, 3] = (pred[:, 3] * scale_image[1])
-            # pred_global[:, 4] = pred[:, 4]
-            # # convert to int
-            # pred_dict['global'] = pred_global
-            # tree_info = np.append(tree_info, pred_global[:, :4].astype('int'),
-                                  # axis=0)
-        # else:
-            # pred_dict['global'] = None
-        # tree_dict_info.append(pred_dict)
-        # counter += 1
-        # if np.mod(counter, np.floor(len(origin_list)/20)) == 0:
-            # print('Percent done:', counter / len(origin_list))
-    # return tree_dict_info, tree_info
