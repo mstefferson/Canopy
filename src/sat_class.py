@@ -2,7 +2,6 @@ import os
 import imageio
 import numpy as np
 import rasterio
-from skimage import io as skio
 import warnings
 import glob
 import pandas as pd
@@ -11,13 +10,18 @@ import pyproj
 
 class SatelliteTif():
     def __init__(self, tif_file, rel_path_2_data, rel_path_2_output,
-                 c_channels=[0, 1, 3], imag_w=200, imag_h=200,
+                 c_channels=[0, 1, 3], imag_w=400, imag_h=400,
                  train_window=0.4, num_train=100, valid_frac=0.3,
                  r_pred_start=0, r_pred_end=np.inf,
                  c_pred_start=0, c_pred_end=np.inf):
         # store tif
         self.tif_file = tif_file
-        self.sat_data = rasterio.open(tif_file)
+        if tif_file is not None:
+            self.sat_data = rasterio.open(tif_file)
+            self.c_channels = c_channels
+            self.sat_w = self.sat_data.width
+            self.sat_h = self.sat_data.height
+            self.sat_c = self.sat_data.count
         # store geometry conversion type
         self.crs = self.sat_data.crs
         # lat/lon project string
@@ -25,10 +29,6 @@ class SatelliteTif():
         # set geometry
         self.tif_norm = 65535.
         self.jpg_norm = 255
-        self.c_channels = c_channels
-        self.sat_w = self.sat_data.width
-        self.sat_h = self.sat_data.height
-        self.sat_c = self.sat_data.count
         self.img_w = imag_w
         self.img_h = imag_h
         self.img_c = len(c_channels)
@@ -47,7 +47,9 @@ class SatelliteTif():
         self.train_dir = self.base_dir + '/train'
         self.valid_dir = self.base_dir + '/valid'
         self.output_dir = os.getcwd() + '/' + rel_path_2_output
-        self.build_directories()
+        self.build_directories([self.base_dir, self.pred_dir,
+                                self.train_dir, self.valid_dir,
+                                self.output_dir])
         # set prediction class and train params
         self.valid_frac = valid_frac
         # get orgins for each subset
@@ -125,10 +127,7 @@ class SatelliteTif():
             if save_name is not None:
                 self.obj_dect_df.to_csv(self.output_dir + '/' + save_name)
 
-    def build_directories(self):
-        dirs2build = [self.base_dir, self.pred_dir,
-                      self.train_dir, self.valid_dir,
-                      self.output_dir]
+    def build_directories(self, dirs2build):
         for a_dir in dirs2build:
             # build dirs
             if not os.path.exists(a_dir):

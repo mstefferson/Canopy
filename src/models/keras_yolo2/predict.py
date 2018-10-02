@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 import argparse
+import glob
 import os
 import sys
 import cv2
@@ -117,13 +118,13 @@ def main(args):
         box_df, bboxes = predict_bounding_box(yolo_model, image)
         # get base directory for writing files
         path_info_list = image_path.split('/')
-        base_dir = '/'.join(path_info_list[:-2])
+        base_dir = os.getcwd()
         file_name = path_info_list[-1]
         file_id = file_name[:-4]
         if save_bb:
             # build file names and directories
             result_dir = config["predict"]["bb_folder"]
-            path2write = base_dir + result_dir
+            path2write = base_dir + '/' + result_dir
             if not os.path.exists(path2write):
                 os.makedirs(path2write)
             filename = path2write + file_id + '.csv'
@@ -132,7 +133,7 @@ def main(args):
         if save_detect:
             # build file names and directories
             result_dir = config["predict"]["detect_folder"]
-            path2write = base_dir + result_dir
+            path2write = base_dir + '/' + result_dir
             filename = (path2write + file_id +
                         '_detected' + file_name[-4:])
             if not os.path.exists(path2write):

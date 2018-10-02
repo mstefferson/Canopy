@@ -9,6 +9,7 @@
       "tif_file": "data/raw/athens/athens_satellite.tif",
       "processed_data_path": "data/processed/athens",
       "output_path": "tree_locations",
+      "output_file_name": "tree_loc.csv",
       "c_channels": [0, 1, 3],
       "imag_w": 400,
       "imag_h": 400,
