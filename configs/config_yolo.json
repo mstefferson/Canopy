@@ -5,7 +5,8 @@
         "anchors":              [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
         "max_box_per_image":    40,        
         "labels":               ["trees"],
-        "freeze_backend":      false
+        "freeze_backend":       false,
+        "iou_threshold":        0.5
     },
 
     "train": {
@@ -15,7 +16,7 @@
         "pretrained_weights":   "",
         "batch_size":           16,
         "learning_rate":        1e-4,
-        "nb_epochs":            100,
+        "nb_epochs":            25,
         "warmup_epochs":        1,
 
         "object_scale":         5.0 ,
@@ -23,18 +24,18 @@
         "coord_scale":          1.0,
         "class_scale":          1.0,
 
-        "saved_weights_name":   "model_weights/full_yolo_tree.h5",
+        "saved_weights_name":   "model_weights/full_yolo_tree_05.h5",
         "debug":                true
     },
 
     "valid": {
-        "valid_image_folder":   "data/processed/athens/train/images/",
-        "valid_annot_folder":   "data/processed/athens/train/labels/",     
+        "valid_image_folder":   "data/processed/athens/valid/images/",
+        "valid_annot_folder":   "data/processed/athens/valid/labels/",     
         "valid_times":          1
     },
 
     "predict": {
-        "weights": "model_weights/full_yolo_tree.h5",
+        "weights": "model_weights/full_yolo_tree_05.h5",
         "save_detect": true,
         "save_bb": true,
         "sat_tif":   "data/raw/athens/athens_satellite.tif",

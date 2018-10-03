@@ -36,11 +36,12 @@ def build_model(config, weights_path):
                 anchors=config['model']['anchors'])
 
     # load weights
+    print('Using weights', weights_path)
     yolo.load_weights(weights_path)
     return yolo
 
 
-def predict_bounding_box(model, image):
+def predict_bounding_box(model, image, iou_threshold):
     '''
     Predicts the bounding boxes for a single image
     Args:
@@ -55,7 +56,7 @@ def predict_bounding_box(model, image):
         N/A
     '''
     # predict
-    bboxes = model.predict(image)
+    bboxes = model.predict(image, iou_threshold=iou_threshold)
     # store bounding boxes in a more usable format
     df_cols = ['label', 'imag_w', 'imag_h',
                'x', 'y', 'w', 'h', 'conf']
@@ -115,7 +116,8 @@ def main(args):
         # load image and predict bounding box
         image = cv2.imread(image_path)
         # predict to get boxes
-        box_df, bboxes = predict_bounding_box(yolo_model, image)
+        box_df, bboxes = predict_bounding_box(
+            yolo_model, image, iou_threshold=config['model']['iou_threshold'])
         # get base directory for writing files
         path_info_list = image_path.split('/')
         base_dir = os.getcwd()

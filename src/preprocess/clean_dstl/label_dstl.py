@@ -260,8 +260,8 @@ def build_val_train(path2data, val_size=0.3):
     if os.path.exists(image_path) and os.path.exists(label_path):
         image_path_train = path2data + 'train/images/'
         label_path_train = path2data + 'train/labels/'
-        image_path_val = path2data + 'val/images/'
-        label_path_val = path2data + 'val/labels/'
+        image_path_val = path2data + 'valid/images/'
+        label_path_val = path2data + 'valid/labels/'
         # make dirs
         all_dirs = [image_path_train, label_path_train,
                     image_path_val, label_path_val]

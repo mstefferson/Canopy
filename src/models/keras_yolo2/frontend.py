@@ -251,6 +251,7 @@ class YOLO(object):
                     coord_scale,
                     class_scale,
                     saved_weights_name='best_weights.h5',
+                    iou_threshold=0.3,
                     debug=False):     
 
         self.batch_size = batch_size
@@ -323,7 +324,8 @@ class YOLO(object):
                                  max_queue_size   = 8)      
 
         # Compute mAP on the validation set
-        average_precisions = self.evaluate(valid_generator)     
+        average_precisions = self.evaluate(valid_generator,
+                                           iou_threshold=iou_threshold)     
 
         # print evaluation
         for label, average_precision in average_precisions.items():
@@ -360,7 +362,8 @@ class YOLO(object):
             raw_height, raw_width, raw_channels = raw_image.shape
 
             # make the boxes and the labels
-            pred_boxes  = self.predict(raw_image)
+            pred_boxes  = self.predict(raw_image, 
+                                       iou_threshold=iou_threshold)
 
             
             score = np.array([box.score for box in pred_boxes])
@@ -445,7 +448,7 @@ class YOLO(object):
 
         return average_precisions    
 
-    def predict(self, image):
+    def predict(self, image, iou_threshold=0.3):
         image_h, image_w, _ = image.shape
         image = cv2.resize(image, (self.input_size, self.input_size))
         image = self.feature_extractor.normalize(image)
@@ -455,6 +458,7 @@ class YOLO(object):
         dummy_array = np.zeros((1,1,1,1,self.max_box_per_image,4))
 
         netout = self.model.predict([input_image, dummy_array])[0]
-        boxes  = decode_netout(netout, self.anchors, self.nb_class)
+        boxes  = decode_netout(netout, self.anchors, self.nb_class,
+                              obj_threshold=iou_threshold)
 
         return boxes

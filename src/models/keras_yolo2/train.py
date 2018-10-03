@@ -5,6 +5,7 @@ import os
 import sys
 import numpy as np
 import json
+import logging
 sys.path.append(os.getcwd())
 from src.models.keras_yolo2.preprocessing import parse_annotation
 from src.models.keras_yolo2.frontend import YOLO
@@ -26,6 +27,24 @@ def main(args):
         -A log file in train_info/
         -The train weights---location based on config
     '''
+    # set-up logger
+    logger = logging.getLogger('yolo_train')
+    logger.setLevel(logging.DEBUG)
+    # create file handler which logs even debug messages
+    fh = logging.FileHandler('yolo_train.log', mode='w')
+    fh.setLevel(logging.INFO)
+    # create console handler with a higher log level
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.ERROR)
+    # create formatter and add it to the handlers
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    ch.setFormatter(formatter)
+    fh.setFormatter(formatter)
+    # add the handlers to logger
+    logger.addHandler(ch)
+    logger.addHandler(fh)
+    # build the sat_obj
     # get configs
     config_path = args.conf
     with open(config_path) as config_buffer:
@@ -79,6 +98,7 @@ def main(args):
         config['model']['labels'] = train_labels.keys()
 
     # construct the model
+    logger.info('Building YOLO')
     yolo = YOLO(backend=config['model']['backend'],
                 input_size=config['model']['input_size'],
                 labels=config['model']['labels'],
@@ -88,11 +108,13 @@ def main(args):
     # load the pretrained weights (if any)
     pre_w_path = config['train']['pretrained_weights']
     if os.path.exists(pre_w_path):
-        print("Loading pre-trained weights in",
-              pre_w_path)
+        logger.info("Loading pre-trained weights in " + pre_w_path)
         yolo.load_weights(pre_w_path)
+    else:
+        logger.info("No pre-trained weights loaded")
 
     # start the training process
+    logger.info('Training started...')
     ave_pred, mAP = yolo.train(train_imgs=train_imgs,
                                valid_imgs=valid_imgs,
                                train_times=config['train']['train_times'],
@@ -108,8 +130,12 @@ def main(args):
                                class_scale=config['train']['class_scale'],
                                saved_weights_name=(
                                    config['train']['saved_weights_name']),
-                               debug=config['train']['debug'])
+                               debug=config['train']['debug'],
+                               iou_threshold=config['model']['iou_threshold'])
 
+    logger.info('Training finished...')
+    logger.info('mAP: ' + str(mAP))
+    logger.info('weights: ' + str(config['train']['saved_weights_name']))
     # Store training to file
     directory = 'train_info/'
     if not os.path.exists(directory):

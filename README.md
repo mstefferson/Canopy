@@ -67,6 +67,7 @@ This repo can take the DSTL, and process it to a useable format for training. It
 ```
 python src/preprocess/clean_dstl/build_dstl_dataset.py -c configs/config_dstl.json
 ```
+To predict on DSTL, you may need to change permission on directory
 
 ## Train
 ### Set-up
