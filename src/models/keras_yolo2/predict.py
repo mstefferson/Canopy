@@ -67,12 +67,14 @@ def predict_bounding_box(model, image, iou_threshold):
         width = (box.xmax - box.xmin) / 2
         y_center = (box.ymax + box.ymin) / 2
         height = (box.ymax - box.ymin) / 2
-        box_df.loc[row, df_cols] = [box.label, image.shape[1], image.shape[0],
-                                    x_center, y_center, width, height, box.c]
+        label = box.label
+        conf = box.c
+        box_df.loc[row, df_cols] = [label, image.shape[1], image.shape[0],
+                                    x_center, y_center, width, height, conf]
     return box_df, bboxes
 
 
-def main(args):
+def main(config):
     '''
     Predict the bounding boxes for a single image
     Args:
@@ -92,11 +94,6 @@ def main(args):
             in directories with the same base path as the images,
             /base/path/images
     '''
-    # set configs
-    config_path = args.conf
-    # build config
-    with open(config_path) as config_buffer:
-        config = json.load(config_buffer)
     # get params
     weights_path = config["predict"]["weights"]
     save_detect = config["predict"]["save_detect"]
@@ -180,5 +177,10 @@ if __name__ == '__main__':
         '--detect',
         help='save detect file')
     args = argparser.parse_args()
+    # set configs
+    config_path = args.conf
+    # build config
+    with open(config_path) as config_buffer:
+        config = json.load(config_buffer)
     # run main
-    main(args)
+    main(configs)

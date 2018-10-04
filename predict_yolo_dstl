@@ -1,2 +1,2 @@
 #!/bin/bash
-python src/models/keras_yolo2/predict.py -c configs/config_yolo_dstl.json
+python src/models/predict.py -c configs/config_predict_dstl.json
