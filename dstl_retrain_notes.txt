@@ -1,0 +1,4 @@
+Thursday night: 
+trees 0.0507
+canopy 0.0459
+mAP: 0.0483

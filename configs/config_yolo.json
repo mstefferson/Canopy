@@ -4,7 +4,7 @@
         "input_size":           416,
         "anchors":              [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
         "max_box_per_image":    100,        
-        "labels":               ["trees"],
+        "labels":               ["trees", "canopy"],
         "freeze_backend":       false,
         "iou_threshold":        0.5
     },
@@ -13,18 +13,18 @@
         "train_image_folder":   "data/processed/athens/label_100/valid/images/",
         "train_annot_folder":   "data/processed/athens/label_100/valid/labels/",     
         "train_times":          1,
-        "pretrained_weights":   "model_weights/full_yolo_tree_dstl_blah.h5",
+        "pretrained_weights":   "model_weights/full_yolo_tree_dstl.h5",
         "batch_size":           16,
         "learning_rate":        1e-4,
-        "nb_epochs":            25,
-        "warmup_epochs":        1,
+        "nb_epochs":            50,
+        "warmup_epochs":        5,
 
         "object_scale":         5.0 ,
         "no_object_scale":      1.0,
         "coord_scale":          1.0,
         "class_scale":          1.0,
 
-        "saved_weights_name":   "model_weights/full_yolo_tree_100.h5",
+        "saved_weights_name":   "model_weights/full_yolo_tree_canopy_100.h5",
         "debug":                true
     },
 

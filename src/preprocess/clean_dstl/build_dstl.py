@@ -35,22 +35,30 @@ def main(config, logger):
     # ignore low contrast warning
     # Loop over sub_dirs in case something breaks
     for a_dir in config["dstl"]["sub_dirs"]:
-        logger.info('Analyzing dir ' + a_dir)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", UserWarning)
-            clean_dstl.process_dstl_directory(
-                dir_path=data_path + 'three_band/',
-                sub_dirs=[a_dir],
-                image_save_dir=save_path + 'chopped_images',
-                annotations_save_dir=save_path,
-                geojson_dir=geojson_dir,
-                grid_sizes=grid_sizes,
-                block_shape=(config["dstl"]["imag_h"],
-                             config["dstl"]["imag_w"], 3)
-            )
-        logger.info('Processed all data')
-        # run label_dstl main
-        label_dstl.main(config, logger)
+        # logger.info('Analyzing dir ' + a_dir)
+        # with warnings.catch_warnings():
+            # warnings.simplefilter("ignore", UserWarning)
+            # clean_dstl.process_dstl_directory(
+                # dir_path=data_path + 'three_band/',
+                # sub_dirs=[a_dir],
+                # image_save_dir=save_path + 'chopped_images',
+                # annotations_save_dir=save_path,
+                # geojson_dir=geojson_dir,
+                # grid_sizes=grid_sizes,
+                # block_shape=(config["dstl"]["imag_h"],
+                             # config["dstl"]["imag_w"], 3)
+            # )
+        # logger.info('Processed all data')
+        # # run label_dstl main
+        # label_dstl.main(config, logger)
+        print('Training')
+        path_images = os.getcwd() + '/data/processed/dstl/train/images'
+        path_label = os.getcwd() + '/data/processed/dstl/train/labels'
+        label_dstl.verify_image_label_match(path_images, path_label)
+        print('Valid')
+        path_images = os.getcwd() + '/data/processed/dstl/valid/images'
+        path_label = os.getcwd() + '/data/processed/dstl/valid/labels'
+        label_dstl.verify_image_label_match(path_images, path_label)
 
 
 if __name__ == '__main__':
