@@ -284,10 +284,10 @@ def verify_image_label_match(image_path, label_path):
     num_excess2 = len(remove2)
     for f in remove1:
         fremove = image_path + '/' + f + '.png'
-        os.shutil(fremove, move_dir1)
+        shutil.move(fremove, move_dir1)
     for f in remove2:
         fremove = label_path + '/' + f + '.xml'
-        os.shutil(fremove, move_dir1)
+        shutil.move(fremove, move_dir1)
     return num_excess1, num_excess2
 
 
