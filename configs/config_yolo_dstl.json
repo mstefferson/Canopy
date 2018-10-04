@@ -24,7 +24,7 @@
         "coord_scale":          1.0,
         "class_scale":          1.0,
 
-        "saved_weights_name":   "model_weights/full_yolo_tree_dstl.h5",
+        "saved_weights_name":   "model_weights/full_yolo_tree_dstl_all.h5",
         "debug":                true
     },
 
@@ -35,7 +35,7 @@
     },
 
     "predict": {
-        "weights": "model_weights/full_yolo_tree_dstl.h5",
+        "weights": "model_weights/full_yolo_tree_dstl_all.h5",
         "save_detect": true,
         "save_bb": true,
         "sat_tif":   "data/raw/athens/athens_satellite.tif",

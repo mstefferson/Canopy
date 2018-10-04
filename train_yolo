@@ -1,2 +1,0 @@
-#!/bin/bash
-python src/models/keras_yolo2/train.py -c configs/config_yolo.json

@@ -107,6 +107,7 @@ def main(args):
                 freeze_backend=config['model']['freeze_backend'])
     # load the pretrained weights (if any)
     pre_w_path = config['train']['pretrained_weights']
+    print('Looking to load weights', pre_w_path)
     if os.path.exists(pre_w_path):
         logger.info("Loading pre-trained weights in " + pre_w_path)
         yolo.load_weights(pre_w_path)
@@ -145,7 +146,7 @@ def main(args):
     filename_indiv = directory + 'trainlog_' + datestr
     filename_all = directory + 'trainlog'
     main_info = (datestr + ' Model: ' + config['model']['backend']
-                 + ' mAP:' + str(mAP) + '\n')
+                 + ' mAP: ' + str(mAP) + 'ave_pred: ' + str(ave_pred) + '\n')
     # write to the general log
     f_all = open(filename_all, 'a+')
     f_all.write(main_info)
