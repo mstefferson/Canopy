@@ -7,6 +7,7 @@ import sys
 import shutil
 import argparse
 import numpy as np
+import glob
 from lxml import etree
 
 
@@ -255,7 +256,6 @@ def verify_image_label_match(image_path, label_path):
     # get all files in both paths
     list1 = glob.glob(image_path + '/*')
     list2 = glob.glob(label_path + '/*')
-    print('1:', len(list1), '2:', len(list2))
     # strip the file extension
     strip1 = [a_str.split('/')[-1][:-4] for a_str in list1]
     strip2 = [a_str.split('/')[-1][:-4] for a_str in list2]
@@ -263,14 +263,15 @@ def verify_image_label_match(image_path, label_path):
     intersect = set(strip1).intersection(set(strip2))
     remove1 = set(strip1) - set(strip2)
     remove2 = set(strip2) - set(strip1)
-    print('intersect:', len(intersect))
-    print('r1:', len(remove1), 'r2:', len(remove2))
+    num_excess1 = len(remove1)
+    num_excess2 = len(remove2)
     for f in remove1:
         fremove = image_path + '/' + f + '.png'
         os.shutil(fremove, move_dir1)
     for f in remove2:
         fremove = label_path + '/' + f + '.xml'
         os.shutil(fremove, move_dir1)
+    return num_excess1, num_excess2
 
 
 def build_val_train(path2data, val_size=0.3):
@@ -346,7 +347,7 @@ def build_val_train(path2data, val_size=0.3):
         print('No data to move to train/val')
 
 
-def main(config):
+def main(config, logger):
     '''
     After cleaning the dstl data, i.e. building annotations and chopping up
         the files by running clean_dstl, this function will build a nice
@@ -366,26 +367,30 @@ def main(config):
     df, unlabelfiles = get_all_bounding(config['dstl']['proc_data_rel'],
                                         config['dstl']['imag_w'],
                                         config['dstl']['imag_h'])
-    print('Got all bounding boxes')
+    logger.info('Got all bounding boxes')
     # get all the bound box labels
     build_labels(df, unlabelfiles, config['dstl']['imag_w'],
                  config['dstl']['imag_h'],
                  lab_format=config['dstl']['label_format'])
-    print('Built all labels')
+    logger.info('Built all labels')
     # build val/train
     path2data = os.getcwd() + config['dstl']['proc_data_rel']
     build_val_train(path2data, val_size=config['dstl']['valid_frac'])
-    print('Move to train/val')
+    logger.info('Move to train/val')
     # verify labeles/images match. Temp solution to bug
     image_path = path2data + 'train/images/'
     label_path = path2data + 'train/images/'
-    verify_image_label_match(image_path, label_path)
-    print('Verified train')
+    ne1, ne2 = verify_image_label_match(image_path, label_path)
+    str2log = ('Verified train excess image: '
+               + str(ne1) + ' excess lab: ' + str(ne2))
+    logger.info(str2log)
     image_path = path2data + 'valid/images/'
     label_path = path2data + 'valid/images/'
-    verify_image_label_match(image_path, label_path)
-    print('Verified valid')
-    print('Finished building dstl')
+    ne1, ne2 = verify_image_label_match(image_path, label_path)
+    str2log = ('Verified valid excess image: '
+               + str(ne1) + ' excess lab: ' + str(ne2))
+    logger.info(str2log)
+    logger.info('Finished_dstl')
 
 
 if __name__ == '__main__':
@@ -407,5 +412,22 @@ if __name__ == '__main__':
     with open(config_path) as config_buffer:
         # config = json.loads(config_buffer.read())
         config = json.load(config_buffer)
+    # set-up logger
+    logger = logging.getLogger('dstl')
+    logger.setLevel(logging.DEBUG)
+    # create file handler which logs even debug messages
+    fh = logging.FileHandler('dstl_label.log', mode='w')
+    fh.setLevel(logging.INFO)
+    # create console handler with a higher log level
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.ERROR)
+    # create formatter and add it to the handlers
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    ch.setFormatter(formatter)
+    fh.setFormatter(formatter)
+    # add the handlers to logger
+    logger.addHandler(ch)
+    logger.addHandler(fh)
     # run main
-    main(config)
+    main(config, logger)

@@ -7,7 +7,7 @@ import os
 import warnings
 
 
-def main(config):
+def main(config, logger):
     '''
     Handles the cleaning and labeling of dstl images (equivalent to running
         clean_dstl and label_dstl. This will build a nice labeled training
@@ -22,23 +22,6 @@ def main(config):
     Writes to file:
         Writes /path/2/processed/data/(train, val)/(images, labels)
     '''
-    # set-up logger
-    logger = logging.getLogger('dstl')
-    logger.setLevel(logging.DEBUG)
-    # create file handler which logs even debug messages
-    fh = logging.FileHandler('dstl.log', mode='w')
-    fh.setLevel(logging.INFO)
-    # create console handler with a higher log level
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.ERROR)
-    # create formatter and add it to the handlers
-    formatter = logging.Formatter(
-        '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    ch.setFormatter(formatter)
-    fh.setFormatter(formatter)
-    # add the handlers to logger
-    logger.addHandler(ch)
-    logger.addHandler(fh)
     # make dirs
     if not os.path.exists(os.getcwd() + config["dstl"]["proc_data_rel"]):
         os.makedirs(os.getcwd() + config["dstl"]["proc_data_rel"])
@@ -66,21 +49,8 @@ def main(config):
                              config["dstl"]["imag_w"], 3)
             )
         logger.info('Processed all data')
-        # get all the bound box labels
-        df, files2delete = label_dstl.get_all_bounding(
-            config['dstl']['proc_data_rel'], config['dstl']['imag_w'],
-            config['dstl']['imag_h'])
-        logger.info('Got all bounding boxes')
-        # get all the bound box labels
-        label_dstl.build_labels(df, files2delete, config['dstl']['imag_w'],
-                                config['dstl']['imag_h'],
-                                lab_format=config['dstl']['label_format'])
-        logger.info('Built all labels')
-        # build val/train
-        path2data = os.getcwd() + config['dstl']['proc_data_rel']
-        label_dstl.build_val_train(path2data,
-                                   val_size=config['dstl']['valid_frac'])
-        logger.info('Move to train/val')
+        # run label_dstl main
+        label_dstl.main(config, logger)
 
 
 if __name__ == '__main__':
@@ -99,4 +69,21 @@ if __name__ == '__main__':
     # load config
     with open(config_path) as config_buffer:
         config = json.load(config_buffer)
-    main(config)
+    # set-up logger
+    logger = logging.getLogger('dstl')
+    logger.setLevel(logging.DEBUG)
+    # create file handler which logs even debug messages
+    fh = logging.FileHandler('dstl_build.log', mode='w')
+    fh.setLevel(logging.INFO)
+    # create console handler with a higher log level
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.ERROR)
+    # create formatter and add it to the handlers
+    formatter = logging.Formatter(
+        '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    ch.setFormatter(formatter)
+    fh.setFormatter(formatter)
+    # add the handlers to logger
+    logger.addHandler(ch)
+    logger.addHandler(fh)
+    main(config, logger)
