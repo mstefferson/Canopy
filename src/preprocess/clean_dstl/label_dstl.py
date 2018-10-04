@@ -201,6 +201,8 @@ def build_labels(df, unlabelfiles, imag_w, imag_h, lab_format='voc'):
             f_name_list = f_name.split('/')
             # get image name
             f_img = base_dir + '/images/' + f_name_list[-1]
+            # move the image
+            os.rename(f_name, f_img)
             # grab labels depending on format
             if lab_format == 'yolo':
                 f_name_local_lab = f_name_list[-1][:-4]+'.txt'
@@ -226,7 +228,6 @@ def build_labels(df, unlabelfiles, imag_w, imag_h, lab_format='voc'):
                 error_str = ('Do not recognize label conversion format. ' +
                              'Must be voc or yolo')
                 raise RuntimeError(error_str)
-            os.rename(f_name, f_img)
     else:
         print('No labeled data')
     # remove chopped_files directory
@@ -235,6 +236,41 @@ def build_labels(df, unlabelfiles, imag_w, imag_h, lab_format='voc'):
         os.rmdir(chopped_dir)
     else:
         print('Chopped not empty, not deleting')
+
+
+def verify_image_label_match(image_path, label_path):
+    # get base path
+    base_path1 = '/'.join(image_path.split('/')[:-2])
+    base_path2 = '/'.join(label_path.split('/')[:-2])
+    if base_path1 != base_path2:
+        error_str = "Error! Images and labels don't match"
+        raise RuntimeError(error_str)
+    # make dirs
+    move_dir1 = base_path1 + '/mistmatch/images/'
+    move_dir2 = base_path1 + '/mistmatch/labels/'
+    dirs2make = [move_dir1, move_dir2]
+    for a_dir in dirs2make:
+        if not os.path.exists(a_dir):
+            os.makedirs(a_dir)
+    # get all files in both paths
+    list1 = glob.glob(image_path + '/*')
+    list2 = glob.glob(label_path + '/*')
+    print('1:', len(list1), '2:', len(list2))
+    # strip the file extension
+    strip1 = [a_str.split('/')[-1][:-4] for a_str in list1]
+    strip2 = [a_str.split('/')[-1][:-4] for a_str in list2]
+    # get intersection
+    intersect = set(strip1).intersection(set(strip2))
+    remove1 = set(strip1) - set(strip2)
+    remove2 = set(strip2) - set(strip1)
+    print('intersect:', len(intersect))
+    print('r1:', len(remove1), 'r2:', len(remove2))
+    for f in remove1:
+        fremove = image_path + '/' + f + '.png'
+        os.shutil(fremove, move_dir1)
+    for f in remove2:
+        fremove = label_path + '/' + f + '.xml'
+        os.shutil(fremove, move_dir1)
 
 
 def build_val_train(path2data, val_size=0.3):
@@ -340,6 +376,16 @@ def main(config):
     path2data = os.getcwd() + config['dstl']['proc_data_rel']
     build_val_train(path2data, val_size=config['dstl']['valid_frac'])
     print('Move to train/val')
+    # verify labeles/images match. Temp solution to bug
+    image_path = path2data + 'train/images/'
+    label_path = path2data + 'train/images/'
+    verify_image_label_match(image_path, label_path)
+    print('Verified train')
+    image_path = path2data + 'valid/images/'
+    label_path = path2data + 'valid/images/'
+    verify_image_label_match(image_path, label_path)
+    print('Verified valid')
+    print('Finished building dstl')
 
 
 if __name__ == '__main__':
