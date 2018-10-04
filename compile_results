@@ -1,0 +1,2 @@
+#!/bin/bash
+python src/postprocess/compile_prediction.py -c configs/config_satfile.json

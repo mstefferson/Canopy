@@ -38,8 +38,8 @@ def main(args):
         rel_path_2_output=config["sat_info"]["output_path"],
         imag_w=config["sat_info"]['imag_w'],
         imag_h=config["sat_info"]["imag_h"])
-    print('collectinf outputs')
-    sat_master.collect_outputs('example_save.csv')
+    print('collecting outputs')
+    sat_master.collect_outputs(config["sat_info"]["output_file_name"])
 
 
 if __name__ == '__main__':
