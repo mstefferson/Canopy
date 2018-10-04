@@ -240,6 +240,23 @@ def build_labels(df, unlabelfiles, imag_w, imag_h, lab_format='voc'):
 
 
 def verify_image_label_match(image_path, label_path):
+    '''
+    At some point, there was a mismatch between files in images
+        and labels (a bug that no longer exists).
+        This function moves mislabled files
+        to a mismatched directory.
+    Args:
+        image_path (str): path to dslt images
+        label_path (str): path to dslt labels
+    Returns:
+        num_excess1 (int): excess files in images (no corresponding label)
+        num_excess2 (int): excess files in labels (no corresponding image)
+    Updates:
+        N/A
+    Writes to file:
+        Moves mismatched images and labels to
+        /base/path/data/processed/mismatch/(images, labels)
+    '''
     # get base path
     base_path1 = '/'.join(image_path.split('/')[:-2])
     base_path2 = '/'.join(label_path.split('/')[:-2])
