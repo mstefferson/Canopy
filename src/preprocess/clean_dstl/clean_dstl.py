@@ -140,6 +140,7 @@ class DSTLImage:
         -------
         (list : str) : a list of the label names
         """
+        print(self._features.keys())
         return {label: utils.OBJ_CLASS_TO_ID[label]
                 for label in self._features.keys()}
 

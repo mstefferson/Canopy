@@ -122,7 +122,7 @@ def get_all_bounding(process_path, imag_w, imag_h):
     # drop nans()
     df.dropna(axis=0, inplace=True)
     # set all the labels, after rerunning set just to trees
-    label_dir = {'trees': 0}
+    label_dir = {'trees': 0, 'canopy': 1}
     df['label'] = df.label_str.apply(lambda x: label_dir[x]).astype('int')
     df['label'] = df['label'].astype('int')
     # get width and height

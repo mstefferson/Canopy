@@ -16,19 +16,21 @@ import os
 # Conversion of labels to id for path classification
 PATCH_CLASS_TO_ID = {
     'trees': 0,
-    'water': 1,
-    'crops': 2,
-    'vehicles': 3,
-    'buildings': 4,
-    'field': 5
+    'canopy': 1,
+    'water': 2,
+    'crops': 3,
+    'vehicles': 4,
+    'buildings': 5,
+    'field': 6
 }
 
 # Conversion of labels to id for object detection
 OBJ_CLASS_TO_ID = {
-    'vehicles': 0,
-    'buildings': 1,
-    'animals': 2,
-    'trees': 3
+    'trees': 0,
+    'canopy': 1,
+    'vehicles': 2,
+    'buildings': 3,
+    'animals': 4
 }
 
 
