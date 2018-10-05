@@ -51,13 +51,13 @@ def main(args):
         config = json.load(config_buffer)
     # set paths
     curr_dir = os.getcwd()
-    train_image_folder = (curr_dir + '/' + 
+    train_image_folder = (curr_dir + '/' +
                           config['train']['train_image_folder'])
-    train_annot_folder = (curr_dir + '/' + 
+    train_annot_folder = (curr_dir + '/' +
                           config['train']['train_annot_folder'])
-    valid_image_folder = (curr_dir + '/' + 
+    valid_image_folder = (curr_dir + '/' +
                           config['valid']['valid_image_folder'])
-    valid_annot_folder = (curr_dir + '/' + 
+    valid_annot_folder = (curr_dir + '/' +
                           config['valid']['valid_annot_folder'])
     # parse annotations of the training set
     train_imgs, train_labels = (
