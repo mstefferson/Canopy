@@ -9,10 +9,8 @@ import warnings
 
 def main(config, logger):
     '''
-    Handles the cleaning and labeling of dstl images (equivalent to running
-        clean_dstl and label_dstl. This will build a nice labeled training
-        and validation set with the appropriate format. This wraps
-        clean_dstl and label_dstl
+    The yolo model does something strange to the data. This is an outstanding bug,
+        but this function is a temporary work around.
     Args:
         config (dict): loaded dstl config json. Contains image and path info
     Returns:
@@ -28,29 +26,7 @@ def main(config, logger):
     # set paths
     data_path = os.getcwd() + config["dstl"]["raw_data_rel"]
     save_path = os.getcwd() + config["dstl"]["proc_data_rel"]
-    geojson_dir = data_path + "train_geojson_v3/"
-    grid_file = data_path + "grid_sizes.csv"
-    grid_sizes = clean_dstl.import_grid_sizes(grid_file)
-    # process the image
     # ignore low contrast warning
-    # Loop over sub_dirs in case something breaks
-    for a_dir in config["dstl"]["sub_dirs"]:
-        logger.info('Analyzing dir ' + a_dir)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", UserWarning)
-            clean_dstl.process_dstl_directory(
-                dir_path=data_path + 'three_band/',
-                sub_dirs=[a_dir],
-                image_save_dir=save_path + 'chopped_images',
-                annotations_save_dir=save_path,
-                geojson_dir=geojson_dir,
-                grid_sizes=grid_sizes,
-                block_shape=(config["dstl"]["imag_h"],
-                             config["dstl"]["imag_w"], 3)
-            )
-        logger.info('Processed all data')
-        # run label_dstl main
-        label_dstl.main(config, logger)
         print('Training')
         path_images = os.getcwd() + '/data/processed/dstl/train/images'
         path_label = os.getcwd() + '/data/processed/dstl/train/labels'
@@ -81,7 +57,7 @@ if __name__ == '__main__':
     logger = logging.getLogger('dstl')
     logger.setLevel(logging.DEBUG)
     # create file handler which logs even debug messages
-    fh = logging.FileHandler('dstl_build.log', mode='w')
+    fh = logging.FileHandler('dstl_clean.log', mode='w')
     fh.setLevel(logging.INFO)
     # create console handler with a higher log level
     ch = logging.StreamHandler()

@@ -85,11 +85,12 @@ class SatelliteTif():
         files = glob.glob(self.pred_collect_dir + '/*csv')
         df_columns = ['fname_full', 'fname', 'label', 'imag_w', 'imag_h',
                       'x', 'y', 'w', 'h', 'conf',
-                      'w_pixel', 'h_pixel', 'w_meter', 'h_meter',
+                      'w_pixel', 'h_pixel',
                       'r_origin', 'c_origin', 'r_local', 'c_local', 'r_global',
-                      'c_global', 'lon', 'lat']
+                      'c_global', 'lon', 'lat', 'w_meter', 'h_meter']
         file_cols = ['label', 'imag_w', 'imag_h', 'x', 'y', 'w', 'h', 'conf']
         self.obj_dect_df = pd.DataFrame(index=np.arange(0), columns=df_columns)
+        print('Collecting data for {} files'.format(len(files)))
         for a_file in files:
             # get r,c from file
             file_id = a_file.split('/')[-1]
@@ -123,9 +124,14 @@ class SatelliteTif():
             # append it
             self.obj_dect_df = self.obj_dect_df.append(df_sub,
                                                        ignore_index=True)
-            # save it
-            if save_name is not None:
-                self.obj_dect_df.to_csv(self.output_dir + '/' + save_name)
+        # save it
+        if save_name is not None:
+            full_path = self.output_dir + '/' + save_name
+            print('Saving to', full_path)
+            self.obj_dect_df.to_csv(full_path)
+        else:
+            print('Not saving')
+
 
     def build_directories(self, dirs2build):
         for a_dir in dirs2build:
