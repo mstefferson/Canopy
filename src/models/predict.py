@@ -6,8 +6,19 @@ import cv2
 import numpy as np
 import json
 import pandas as pd
-import src.models.keras_yolo2
-import src.models.pixpeak
+import keras_yolo2
+import pixpeak
+# from keras_yolo2 import * as yolo_pred
+# from pixpeak import * as pix_pred
+
+import sys
+import glob
+import os
+path_to_add = os.path.join( os.path.dirname( os.path.abspath(__file__)), 'keras_yolo2')
+sys.path.append(path_to_add)
+path_to_add = os.path.join( os.path.dirname( os.path.abspath(__file__)), 'pixpeak')
+sys.path.append(path_to_add)
+
 
 
 def main(args):
@@ -37,10 +48,11 @@ def main(args):
         pred_config = json.load(config_buffer)
     # run predictions based on  model
     if pred_config['model'] == 'pixpeak':
-        print('write_me')
+        print('Running pixpeak')
+        pix_pred.main(config)
     elif pred_config['model'] == 'yolo2':
-        src.models.keras_yolo2.predict.main(config)
-        print('write_me')
+        print('Running yolo')
+        yolo_pred(config)
 
 
 if __name__ == '__main__':

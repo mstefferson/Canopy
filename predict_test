@@ -1,0 +1,2 @@
+#!/bin/bash
+python src/models/pixpeak/predict.py -c configs/config_predict.json

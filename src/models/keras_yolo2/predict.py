@@ -95,13 +95,13 @@ def main(config):
             /base/path/images
     '''
     # get params
-    weights_path = config["predict"]["weights"]
-    save_detect = config["predict"]["save_detect"]
-    save_bb = config["predict"]["save_bb"]
+    weights_path = config["weights"]
+    save_detect = config["save_detect"]
+    save_bb = config["save_bb"]
     # build model
     yolo_model = build_model(config, weights_path)
     # get all the files you want to predict on
-    pred_path = config["predict"]["image_path"]
+    pred_path = config["image_path"]
     # pred path can be a folder or image. Grab files accordingly
     if os.path.isfile(pred_path):
         files_2_pred = [pred_path]
@@ -114,7 +114,7 @@ def main(config):
         image = cv2.imread(image_path)
         # predict to get boxes
         box_df, bboxes = predict_bounding_box(
-            yolo_model, image, iou_threshold=config['model']['iou_threshold'])
+            yolo_model, image, iou_threshold=config['iou_threshold'])
         # get base directory for writing files
         path_info_list = image_path.split('/')
         base_dir = os.getcwd()
@@ -122,7 +122,7 @@ def main(config):
         file_id = file_name[:-4]
         if save_bb:
             # build file names and directories
-            result_dir = config["predict"]["bb_folder"]
+            result_dir = config["bb_folder"]
             path2write = base_dir + '/' + result_dir
             if not os.path.exists(path2write):
                 os.makedirs(path2write)
@@ -131,13 +131,13 @@ def main(config):
 
         if save_detect:
             # build file names and directories
-            result_dir = config["predict"]["detect_folder"]
+            result_dir = config["detect_folder"]
             path2write = base_dir + '/' + result_dir
             filename = (path2write + file_id +
                         '_detected' + file_name[-4:])
             if not os.path.exists(path2write):
                 os.makedirs(path2write)
-            image = draw_boxes(image, bboxes, config['model']['labels'])
+            image = draw_boxes(image, bboxes, config['labels'])
             cv2.imwrite(filename, image)
 
 
@@ -183,4 +183,4 @@ if __name__ == '__main__':
     with open(config_path) as config_buffer:
         config = json.load(config_buffer)
     # run main
-    main(configs)
+    main(config)

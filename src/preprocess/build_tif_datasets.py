@@ -62,20 +62,23 @@ def main(config):
                config["build_info"]["valid"],
                config["build_info"]["predict"]]
     dir2build = all_dirs[log_ind]
-    if config["build_info"]["warnings"]:
+    if config["build_info"]["warnings"] and config["build_info"]["erase"]:
         print('Warning: going to delete and rebuild ' + str(dir2build) +
               ' hit enter to continue')
         input()
     if config["build_info"]["train"]:
-        sat_master.clean_train_images()
+        if config["build_info"]["erase"]:
+            sat_master.clean_train_images()
         sat_master.build_train_dataset()
         logger.info('Built training dataset')
     if config["build_info"]["valid"]:
-        sat_master.clean_valid_images()
+        if config["build_info"]["erase"]:
+            sat_master.clean_valid_images()
         sat_master.build_valid_dataset()
         logger.info('Built validation dataset')
     if config["build_info"]["predict"]:
-        sat_master.clean_pred_images()
+        if config["build_info"]["erase"]:
+            sat_master.clean_pred_images()
         sat_master.build_pred_dataset()
         logger.info('Built prediction dataset')
 
