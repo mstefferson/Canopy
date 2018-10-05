@@ -10,9 +10,9 @@
     },
 
     "train": {
-        "train_image_folder":   "data/processed/athens/label_100/train/images/",
-        "train_annot_folder":   "data/processed/athens/label_100/train/labels/",     
-        "train_times":          100,
+        "train_image_folder":   "data/processed/athens/label_100/train/rgb/images/",
+        "train_annot_folder":   "data/processed/athens/label_100/train/rgb/labels/",     
+        "train_times":          10,
         "pretrained_weights":   "model_weights/full_yolo_tree_dstl_all.h5",
         "batch_size":           16,
         "learning_rate":        1e-4,
@@ -23,18 +23,19 @@
         "no_object_scale":      1.0,
         "coord_scale":          1.0,
         "class_scale":          1.0,
-        "saved_weights_name":   "model_weights/full_yolo_tree_athens_all_new.h5",
+
+        "saved_weights_name":   "model_weights/full_yolo_tree_athens_rgb_all.h5",
         "debug":                true
     },
 
     "valid": {
-        "valid_image_folder":   "data/processed/athens/label_100/valid/images/",
-        "valid_annot_folder":   "data/processed/athens/label_100/valid/labels/",     
+        "valid_image_folder":   "data/processed/athens/label_100/valid/rgb/images/",
+        "valid_annot_folder":   "data/processed/athens/label_100/valid/rgb/labels/",     
         "valid_times":          1
     },
 
     "predict": {
-        "weights": "model_weights/full_yolo_tree_athens_all_new.h5",
+        "weights": "model_weights/full_yolo_tree_athens_all.h5",
         "save_detect": true,
         "save_bb": true,
         "sat_tif":   "data/raw/athens/athens_satellite.tif",
