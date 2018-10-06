@@ -7,9 +7,9 @@ import cv2
 import numpy as np
 import json
 import pandas as pd
-from preprocessing import parse_annotation
-from utils import draw_boxes
-from frontend import YOLO
+from preprocessing_yolo import parse_annotation
+from utils_yolo import draw_boxes
+from frontend_yolo import YOLO
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -28,12 +28,13 @@ def build_model(config, weights_path):
     Writes to file:
         N/A
     '''
+    print(config)
     # build model
-    yolo = YOLO(backend=config['model']['backend'],
-                input_size=config['model']['input_size'],
-                labels=config['model']['labels'],
-                max_box_per_image=config['model']['max_box_per_image'],
-                anchors=config['model']['anchors'])
+    yolo = YOLO(backend=config['yolo2']['backend'],
+                input_size=config['yolo2']['input_size'],
+                labels=config['labels'],
+                max_box_per_image=config['yolo2']['max_box_per_image'],
+                anchors=config['yolo2']['anchors'])
 
     # load weights
     print('Using weights', weights_path)
@@ -67,12 +68,14 @@ def predict_bounding_box(model, image, iou_threshold):
         width = (box.xmax - box.xmin) / 2
         y_center = (box.ymax + box.ymin) / 2
         height = (box.ymax - box.ymin) / 2
-        box_df.loc[row, df_cols] = [box.label, image.shape[1], image.shape[0],
-                                    x_center, y_center, width, height, box.c]
+        label = box.label
+        conf = box.c
+        box_df.loc[row, df_cols] = [label, image.shape[1], image.shape[0],
+                                    x_center, y_center, width, height, conf]
     return box_df, bboxes
 
 
-def main(args):
+def main(config):
     '''
     Predict the bounding boxes for a single image
     Args:
@@ -92,19 +95,14 @@ def main(args):
             in directories with the same base path as the images,
             /base/path/images
     '''
-    # set configs
-    config_path = args.conf
-    # build config
-    with open(config_path) as config_buffer:
-        config = json.load(config_buffer)
     # get params
-    weights_path = config["predict"]["weights"]
-    save_detect = config["predict"]["save_detect"]
-    save_bb = config["predict"]["save_bb"]
+    weights_path = config["yolo2"]["weights"]
+    save_detect = config["save_detect"]
+    save_bb = config["save_bb"]
     # build model
     yolo_model = build_model(config, weights_path)
     # get all the files you want to predict on
-    pred_path = config["predict"]["image_path"]
+    pred_path = config["image_path"]
     # pred path can be a folder or image. Grab files accordingly
     if os.path.isfile(pred_path):
         files_2_pred = [pred_path]
@@ -117,7 +115,7 @@ def main(args):
         image = cv2.imread(image_path)
         # predict to get boxes
         box_df, bboxes = predict_bounding_box(
-            yolo_model, image, iou_threshold=config['model']['iou_threshold'])
+            yolo_model, image, iou_threshold=config["yolo2"]['iou_threshold'])
         # get base directory for writing files
         path_info_list = image_path.split('/')
         base_dir = os.getcwd()
@@ -125,7 +123,7 @@ def main(args):
         file_id = file_name[:-4]
         if save_bb:
             # build file names and directories
-            result_dir = config["predict"]["bb_folder"]
+            result_dir = config["bb_folder"]
             path2write = base_dir + '/' + result_dir
             if not os.path.exists(path2write):
                 os.makedirs(path2write)
@@ -134,13 +132,13 @@ def main(args):
 
         if save_detect:
             # build file names and directories
-            result_dir = config["predict"]["detect_folder"]
+            result_dir = config["detect_folder"]
             path2write = base_dir + '/' + result_dir
             filename = (path2write + file_id +
                         '_detected' + file_name[-4:])
             if not os.path.exists(path2write):
                 os.makedirs(path2write)
-            image = draw_boxes(image, bboxes, config['model']['labels'])
+            image = draw_boxes(image, bboxes, config['labels'])
             cv2.imwrite(filename, image)
 
 
@@ -180,5 +178,10 @@ if __name__ == '__main__':
         '--detect',
         help='save detect file')
     args = argparser.parse_args()
+    # set configs
+    config_path = args.conf
+    # build config
+    with open(config_path) as config_buffer:
+        config = json.load(config_buffer)
     # run main
-    main(args)
+    main(config)

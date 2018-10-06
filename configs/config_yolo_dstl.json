@@ -32,15 +32,5 @@
         "valid_image_folder":   "data/processed/dstl/valid/images/",
         "valid_annot_folder":   "data/processed/dstl/valid/labels/",     
         "valid_times":          1
-    },
-
-    "predict": {
-        "weights": "model_weights/full_yolo_tree_dstl_all.h5",
-        "save_detect": true,
-        "save_bb": true,
-        "sat_tif":   "data/raw/athens/athens_satellite.tif",
-        "image_path":   "data/processed/dstl/predict/",
-        "bb_folder":   "data/processed/dstl/bb_info/",
-        "detect_folder":   "data/processed/dstl/images_detected/"
     }
 }

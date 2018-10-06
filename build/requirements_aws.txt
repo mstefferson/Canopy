@@ -1,3 +1,4 @@
 imgaug
 opencv-python
 h5py
+rasterio

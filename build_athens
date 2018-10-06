@@ -1,0 +1,2 @@
+#!/bin/bash
+python src/preprocess/build_tif_datasets.py -c configs/config_satfile.json

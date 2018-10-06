@@ -6,12 +6,12 @@ import sys
 import numpy as np
 import json
 import logging
-sys.path.append(os.getcwd())
-from src.models.keras_yolo2.preprocessing import parse_annotation
-from src.models.keras_yolo2.frontend import YOLO
+from preprocessing_yolo import parse_annotation
+from frontend_yolo import YOLO
 
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
 
 def main(args):
     '''
@@ -171,7 +171,7 @@ if __name__ == '__main__':
     '''
     # parse args
     argparser = argparse.ArgumentParser(
-    description='Train and validate YOLO_v2 model on any dataset')
+        description='Train and validate YOLO_v2 model on any dataset')
     argparser.add_argument(
         '-c',
         '--conf',

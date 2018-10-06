@@ -6,13 +6,13 @@ import tensorflow as tf
 import numpy as np
 import os
 import cv2
-from utils import decode_netout, compute_overlap, compute_ap
+from utils_yolo import decode_netout, compute_overlap, compute_ap
 from keras.applications.mobilenet import MobileNet
 from keras.layers.merge import concatenate
 from keras.optimizers import SGD, Adam, RMSprop
-from preprocessing import BatchGenerator
+from preprocessing_yolo import BatchGenerator
 from keras.callbacks import EarlyStopping, ModelCheckpoint, TensorBoard
-from backend import TinyYoloFeature, FullYoloFeature
+from backend_yolo import TinyYoloFeature, FullYoloFeature
 
 
 class YOLO(object):
@@ -24,7 +24,6 @@ class YOLO(object):
                  anchors,
                  freeze_backend=False):
         self.input_size = input_size
-        
         self.labels   = list(labels)
         self.nb_class = len(self.labels)
         self.nb_box   = len(anchors)//2
