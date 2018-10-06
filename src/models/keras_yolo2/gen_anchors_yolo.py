@@ -2,7 +2,7 @@ import random
 import argparse
 import numpy as np
 import os
-from preprocessing import parse_annotation
+from preprocessing_yolo import parse_annotation
 import json
 
 
