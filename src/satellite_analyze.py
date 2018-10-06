@@ -14,14 +14,17 @@ import imageio
 
 def get_lonlat_tree_file(filename):
     '''
-    Description:
-        Given a GIS *shp file, return the lat/lon of the recorded points
+    Given a GIS *shp file, return the lat/lon of the recorded points
+
     Args:
         filename (str): Path to *shp file
+
     Returns:
         lonlat (np.array shape=[n, 2]): lon/lat of all recorded points
+
     Updates:
         N/A
+
     Write to file:
         N/A
     '''
@@ -39,15 +42,18 @@ def get_lonlat_tree_file(filename):
 
 def get_xy_tree_file(filename):
     '''
-    Description:
-        Given a GIS *shp file, return the x/y (geospatial coords)
+    Given a GIS *shp file, return the x/y (geospatial coords)
         of the recorded points
+
     Args:
         filename (str): Path to *shp file
+
     Returns:
         xy (np.array shape=[n, 2]): geospatial coords of all recorded points
+
     Updates:
         N/A
+
     Write to file:
         N/A
     '''
@@ -63,15 +69,18 @@ def get_xy_tree_file(filename):
 
 def get_known_tree_all(transfunc=get_lonlat_tree_file):
     '''
-    Description:
-        Given a GIS *shp file, return the x/y (geospatial coords)
+    Given a GIS *shp file, return the x/y (geospatial coords)
         of the recorded points
+
     Args:
         filename (str): Path to *shp file
+
     Returns:
         xy (np.array shape=[n, 2]): geospatial coords of all recorded points
+
     Updates:
         N/A
+
     Write to file:
         N/A
     '''
@@ -90,19 +99,22 @@ def get_known_tree_all(transfunc=get_lonlat_tree_file):
 
 def proj_lonlat_2_rc(lon, lat, dataset):
     '''
-    Description:
-        Convert lon/lat coordinates to rows and columns in the tif satellite
+    Convert lon/lat coordinates to rows and columns in the tif satellite
         image. Uses pyproj to convert between coordinate systems
+
     Args:
         lon (float): longitude
         lat (float): latitude
         dataset (rasterio.io.DatasetReader): Gdal data structure from opening a
             tif, dataset = rasterio.open('...')
+
     Returns:
         rc (np.array shape=[n, 2]): row/columns in tif file for all
             recorded points
+
     Updates:
         N/A
+
     Write to file:
         N/A
     '''
@@ -121,19 +133,22 @@ def proj_lonlat_2_rc(lon, lat, dataset):
 
 def proj_rc_2_lonlat(r, c, dataset):
     '''
-    Description:
-        Convert row/columns of tif dataset to lat/lon.
+    Convert row/columns of tif dataset to lat/lon.
         Uses pyproj to convert between coordinate systems
+
     Args:
         lon (float): longitude
         lat (float): latitude
         dataset (rasterio.io.DatasetReader): Gdal data structure from opening a
             tif, dataset = rasterio.open('...')
+
     Returns:
         rc (np.array shape=[n, 2]): row/columns in tif file for all
             recorded points
+
     Updates:
         N/A
+
     Write to file:
         N/A
     '''
@@ -153,8 +168,8 @@ def proj_rc_2_lonlat(r, c, dataset):
 def build_test_train(sat_file, num_images, delta=200,
                      split=0.3, c_channels=[0, 1, 3], fid_start=0):
     '''
-    Description:
-        Builds a test/train set from random squares of a sat_file tif file
+    Builds a test/train set from random squares of a sat_file tif file
+
     Args:
         sat_file (str): path to satellite tif file
         num_images (int): total number of images in data set
@@ -163,15 +178,17 @@ def build_test_train(sat_file, num_images, delta=200,
         c_channels (list of ints, optional): three color bands
             to include in image. Tiff has four: r, g, b, IR
         fid_start: initial file id to label images. e.g., image_fid.jpg
+
     Returns:
         N/A
+
     Updates:
         N/A
+
     Write to file:
         /app/data/(test,train)/images/image_*,
         /app/data/(test,train)/images/key*: test and train image data
             set with keys
-
     '''
     def save_data(sat_data, coors, num2save, num_total, path, save_str, fid):
         '''
@@ -264,9 +281,9 @@ def build_test_train(sat_file, num_images, delta=200,
 def get_satellite_subset(ds_all, r_start, r_end, c_start, c_end,
                          norm=None):
     '''
-    Description:
-        Returns a numpy data array of the rasted satellite
+    Returns a numpy data array of the rasted satellite
         image for all bands from a gdal object.
+
     Args:
         ds_all (rasterio.io.DatasetReader): Gdal data structure from opening a
             tif, ds_all = rasterio.open('...')
@@ -275,11 +292,14 @@ def get_satellite_subset(ds_all, r_start, r_end, c_start, c_end,
         r_end (int): Initial row pixel number of subset
         c_end (int): Final row pixel number of subset
         norm (float): normalization value (max(array) <= norm)
+
     Returns:
         band_data (np.array, size=[r_del, c_del, 4]): The rastered image
             data for all bands
+
     Updates:
         N/A
+
     Write to file:
         N/A
     '''
@@ -314,20 +334,23 @@ def get_satellite_subset(ds_all, r_start, r_end, c_start, c_end,
 
 def get_tree_finder_image(band_data, drop_thres=0.05):
     '''
-    Description:
-        Returns a np.array that is strongely peaked
+    Returns a np.array that is strongely peaked
         where there are trees from the rastered data. The
         output uses the green and IR bands to get peaks along trees
+
     Args:
         band_data (np.array, size=[r_del, c_del, 3/4]): The rastered image
             data for all bands
         Threshold (float, optional): The threshold peak value for
             counting it as a tree. 0.05 seems to work
+
     Returns:
         plant_data (np.array, size=[r_del, c_del]): A map that is strongly
             peaks where there are trees
+
     Updates:
         N/A
+
     Write to file:
         N/A
     '''
@@ -356,9 +379,9 @@ def get_tree_finder_image(band_data, drop_thres=0.05):
 
 def find_peaks_for_subset(ds_all, r_start, r_end, c_start, c_end):
     '''
-    Description:
-        Grabs a data subset and finds all the trees. This is a wrapper
+    Grabs a data subset and finds all the trees. This is a wrapper
         for many functions that: grab subset, gets plant data, find trees
+
     Args:
         ds_all (osgeo.gdal.Dataset): Gdal data structure from opening a tif,
             ds_all = gldal.Open('...')
@@ -366,10 +389,13 @@ def find_peaks_for_subset(ds_all, r_start, r_end, c_start, c_end):
         c_start (int): Initial column pixel number of subset
         r_del (int): Width of subset in pixels along rows
         c_del (int): Width of subset in pixels along columns
+
     Returns:
         plant_dict (dict): summary of tree locations and row/col indices
+
     Updates:
          N/A
+
     Write to file:
          N/A
      '''
@@ -413,16 +439,19 @@ def find_peaks_for_subset(ds_all, r_start, r_end, c_start, c_end):
 
 def main(sat_file):
     '''
-    Description:
-        Loops over an entire satellite image, divides it into subset,
+    Loops over an entire satellite image, divides it into subset,
         and finds trees for each subset. Writes a list of all
         tree locations (in pixels) to files as a pkl
+
     Args:
         sat_file (str): Path to satellite tif file
+
     Returns:
         None
+
     Updates:
         N/A
+
     Write to file:
         'tree_coords.pkl': pickle file of a list of tree coordinates in pixels
     '''
@@ -487,8 +516,8 @@ def main(sat_file):
 
 if __name__ == '__main__':
     '''
-    Description:
-        Takes in commandline arguements and self main()
+    Takes in commandline arguements and self main()
+
     Example call:
         python src/satellite_analyze data/raw/athens_satellite.tif
     '''

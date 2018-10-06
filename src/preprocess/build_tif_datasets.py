@@ -9,18 +9,19 @@ import sat_class
 
 def main(config):
     '''
-    Handles the cleaning and labeling of dstl images (equivalent to running
-        clean_dstl and label_dstl. This will build a nice labeled training
-        and validation set with the appropriate format. This wraps
-        clean_dstl and label_dstl
+    Build the satellite image dataset from a satellite tif
+
     Args:
-        config (dict): loaded dstl config json. Contains image and path info
+        config (dict): Config dictionary
+
     Returns:
         N/A
+
     Update:
         N/A
+
     Writes to file:
-        Writes /path/2/processed/data/(train, val)/(images, labels)
+        Writes /path/2/processed/data/(train, val)/images
     '''
     # set-up logger
     logger = logging.getLogger('sat_build')
@@ -86,8 +87,7 @@ def main(config):
 if __name__ == '__main__':
     '''
     Executeable:
-    python src/preprocess/clean_dstl/build_dstl_dataset.py /
-        -c configs/config_dstl.json
+    python src/preprocess/build_tif_datasets.py -c configs/config_satfile.json
     '''
     # parse args
     parser = argparse.ArgumentParser()

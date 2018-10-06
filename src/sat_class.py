@@ -9,11 +9,34 @@ import pyproj
 
 
 class SatelliteTif():
+    '''
+    Satellite class for dealing with tif files, making images for
+        predictions, and collecting outputs. All thing tif!
+    '''
     def __init__(self, tif_file, rel_path_2_data, rel_path_2_output,
                  c_channels=[0, 1, 3], imag_w=400, imag_h=400,
                  train_window=0.4, num_train=100, valid_frac=0.3,
                  r_pred_start=0, r_pred_end=np.inf,
                  c_pred_start=0, c_pred_end=np.inf):
+        '''
+        Constructor for satellite image
+
+        Args:
+            tif_file (str): Path to tif file
+            rel_path_2_data (str): Path to data
+            rel_path_2_output (str): Path where you want outputs
+            c_channels (list of ints): Color channels for images
+            imag_w (int): Image width
+            imag_h (int): Image height
+            train_window (float): Inner frac of tif image to sample
+                from to make training set
+            num_train (int): Number of training examples
+            valid_frac (float): Validation fraction
+            r_pred_start (int): Row start for prediction
+            r_pred_end (int): Row end for prediction
+            c_pred_start (int): Col start for prediction
+            c_pred_end (int): Col end for prediction
+        '''
         # store tif
         self.tif_file = tif_file
         if tif_file is not None:
@@ -81,6 +104,23 @@ class SatelliteTif():
         self.valid_origins = self.training_origins[self.num_train:, :]
 
     def collect_outputs(self, save_name=None):
+        '''
+        Collects all of the prediction outputs and
+            puts them in a dataframe
+
+        Args:
+            save_name (str): Save name for collected outputs. If none, don't
+                save
+
+        Returns:
+            N/A
+
+        Updates:
+            N/A
+
+        Write to file:
+            N/A
+        '''
         # build a list of all bounding boxes
         files = glob.glob(self.pred_collect_dir + '/*csv')
         df_columns = ['fname_full', 'fname', 'label', 'imag_w', 'imag_h',
@@ -132,8 +172,22 @@ class SatelliteTif():
         else:
             print('Not saving')
 
-
     def build_directories(self, dirs2build):
+        '''
+        Build all of the directory for satellite file.
+
+        Args:
+            dirsbuild (list): list of directories to build
+
+        Returns:
+            N/A
+
+        Updates:
+            N/A
+
+        Write to file:
+            All directories in dir2build
+        '''
         for a_dir in dirs2build:
             # build dirs
             if not os.path.exists(a_dir):
@@ -151,20 +205,22 @@ class SatelliteTif():
 
     def proj_lonlat_2_xy(self, lonlat):
         '''
-        Description:
-            Convert lon/lat coordinates to rows and columns in the tif
-                satellite image. Uses pyproj to convert between coordinate
-                systems
+        Convert lon/lat coordinates to rows and columns in the tif
+            satellite image. Uses pyproj to convert between coordinate systems
+
         Args:
             lon (float): longitude
             lat (float): latitude
             dataset (rasterio.io.DatasetReader): Gdal data structure from
                 opening a tif, dataset = rasterio.open('...')
+
         Returns:
             rc (np.array shape=[n, 2]): row/columns in tif file for all
                 recorded points
+
         Updates:
             N/A
+
         Write to file:
             N/A
         '''
@@ -180,17 +236,20 @@ class SatelliteTif():
 
     def proj_lonlat_2_rc(self, lonlat):
         '''
-        Description:
-            Convert lon/lat coordinates to rows and columns in the tif
+        Convert lon/lat coordinates to rows and columns in the tif
             satellite image. Uses pyproj to convert between coordinate systems
+
         Args:
             lonlat (np.array, size=[n,2]): array of longitude
                 (col1) and lat (col2)
+
         Returns:
             rc (np.array shape=[n, 2]): row/columns in tif file for all
                 recorded points
+
         Updates:
             N/A
+
         Write to file:
             N/A
         '''
@@ -205,17 +264,20 @@ class SatelliteTif():
 
     def proj_rc_2_xy(self, rc):
         '''
-        Description:
-            Convert row/columns of tif dataset to lat/lon.
+        Convert row/columns of tif dataset to lat/lon.
             Uses pyproj to convert between coordinate systems
+
         Args:
             rc (np.array shape=[n, 2]): row/columns in tif file for all
                 recorded points
+
         Returns:
             lonlat (np.array, size=[n,2]): array of longitude (col1)
                 and lat (col2)
+
         Updates:
             N/A
+
         Write to file:
             N/A
         '''
@@ -229,17 +291,20 @@ class SatelliteTif():
 
     def proj_rc_2_lonlat(self, rc):
         '''
-        Description:
-            Convert row/columns of tif dataset to lat/lon.
+        Convert row/columns of tif dataset to lat/lon.
             Uses pyproj to convert between coordinate systems
+
         Args:
             rc (np.array shape=[n, 2]): row/columns in tif file for all
                 recorded points
+
         Returns:
             lonlat (np.array, size=[n,2]): array of longitude (col1)
                 and lat (col2)
+
         Updates:
             N/A
+
         Write to file:
             N/A
         '''
@@ -256,24 +321,98 @@ class SatelliteTif():
         return lonlat
 
     def clean_images(self, path):
-        # DANGER!!!
+        '''
+        Danger! Cleans images in path
+
+        Args:
+            path (str): Path to delete files
+
+        Returns:
+            N/A
+
+        Updates:
+            N/A
+
+        Write to file:
+            N/A
+        '''
         files = glob.glob(path + '/*jpg')
         for f in files:
             os.remove(f)
 
     def clean_pred_images(self):
-        # DANGER!!!
+        '''
+        Danger! Cleans images in prediction path
+
+        Args:
+            path (str): Path to delete files
+
+        Returns:
+            N/A
+
+        Updates:
+            N/A
+
+        Write to file:
+            N/A
+        '''
         self.clean_images(self.pred_dir + '/images')
 
     def clean_train_images(self):
-        # DANGER!!!
+        '''
+        Danger! Cleans images in train path
+
+        Args:
+            path (str): Path to delete files
+
+        Returns:
+            N/A
+
+        Updates:
+            N/A
+
+        Write to file:
+            N/A
+        '''
         self.clean_images(self.train_dir + '/images')
 
     def clean_valid_images(self):
-        # DANGER!!!
+        '''
+        Danger! Cleans images in validation path
+
+        Args:
+            path (str): Path to delete files
+
+        Returns:
+            N/A
+
+        Updates:
+            N/A
+
+        Write to file:
+            N/A
+        '''
         self.clean_images(self.valid_dir + '/images')
 
     def build_origins(self, start_r, end_r, start_c, end_c):
+        '''
+        Builds origins for dividing up the tif image
+
+        Args:
+            r_start (int): Starting row
+            r_end (int): Ending row
+            c_start (int): Starting col
+            c_end (int): Ending col
+
+        Returns:
+            origins (np.array, size=[n,2]): Origins for divided up images
+
+        Updates:
+            N/A
+
+        Write to file:
+            N/A
+        '''
         # set start and end to start/end on a division point
         start_c = np.floor(start_c/self.img_w) * self.img_w
         end_c = np.floor(end_c/self.img_w) * self.img_w
@@ -282,20 +421,81 @@ class SatelliteTif():
         # get all origins
         row_origins = np.arange(start_r, end_r, self.img_h)
         col_origins = np.arange(start_c, end_c, self.img_w)
-        origin_list = np.array([(r, c) for r in row_origins
-                                for c in col_origins]).astype(int)
-        return origin_list
+        origins = np.array([(r, c) for r in row_origins
+                            for c in col_origins]).astype(int)
+        return origins
 
     def build_train_dataset(self):
+        '''
+        Builds training dataset
+
+        Args:
+            N/A
+
+        Returns:
+            N/A
+
+        Updates:
+            N/A
+
+        Write to file:
+            N/A
+        '''
         self.build_dataset(self.train_origins, self.train_dir)
 
     def build_valid_dataset(self):
+        '''
+        Builds validation dataset
+
+        Args:
+            N/A
+
+        Returns:
+            N/A
+
+        Updates:
+            N/A
+
+        Write to file:
+            N/A
+        '''
         self.build_dataset(self.valid_origins, self.valid_dir)
 
     def build_pred_dataset(self):
+        '''
+        Builds prediction dataset
+
+        Args:
+            N/A
+
+        Returns:
+            N/A
+
+        Updates:
+            N/A
+
+        Write to file:
+            N/A
+        '''
         self.build_dataset(self.pred_origins, self.pred_dir)
 
     def build_dataset(self, origins, save_dir):
+        '''
+        Builds a generic data set
+
+        Args:
+            origins (np.array, size=[n,2]): origins of images
+            save_dir (str): Dir to save images
+
+        Returns:
+            N/A
+
+        Updates:
+            N/A
+
+        Write to file:
+            N/A
+        '''
         # build full array (r_start, r_end, c_start, c_end)
         all_coors = np.zeros((len(origins), 4)).astype(int)
         # build all coordinat (row_start, row_end, col_start, col_end)
@@ -341,6 +541,25 @@ class SatelliteTif():
                     look_up_f.write(line2save)
 
     def get_subset(self, r_start, r_end, c_start, c_end):
+        '''
+        Get a data for a subset of the sat file
+
+        Args:
+            r_start (int): Starting row
+            r_end (int): Ending row
+            c_start (int): Starting col
+            c_end (int): Ending col
+
+
+        Returns:
+            data (np.array, size=[row, col, channel]): Requested data
+
+        Updates:
+            N/A
+
+        Write to file:
+            N/A
+        '''
         data = np.zeros((self.img_h, self.img_w, self.img_c))
         for (c_id, c) in enumerate(self.c_channels):
             data[:, :, c_id] = self.sat_data.read(
