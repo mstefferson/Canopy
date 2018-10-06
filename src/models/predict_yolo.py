@@ -28,12 +28,13 @@ def build_model(config, weights_path):
     Writes to file:
         N/A
     '''
+    print(config)
     # build model
-    yolo = YOLO(backend=config['model']['backend'],
-                input_size=config['model']['input_size'],
-                labels=config['model']['labels'],
-                max_box_per_image=config['model']['max_box_per_image'],
-                anchors=config['model']['anchors'])
+    yolo = YOLO(backend=config['yolo2']['backend'],
+                input_size=config['yolo2']['input_size'],
+                labels=config['labels'],
+                max_box_per_image=config['yolo2']['max_box_per_image'],
+                anchors=config['yolo2']['anchors'])
 
     # load weights
     print('Using weights', weights_path)
@@ -95,7 +96,7 @@ def main(config):
             /base/path/images
     '''
     # get params
-    weights_path = config["weights"]
+    weights_path = config["yolo2"]["weights"]
     save_detect = config["save_detect"]
     save_bb = config["save_bb"]
     # build model
@@ -114,7 +115,7 @@ def main(config):
         image = cv2.imread(image_path)
         # predict to get boxes
         box_df, bboxes = predict_bounding_box(
-            yolo_model, image, iou_threshold=config['iou_threshold'])
+            yolo_model, image, iou_threshold=config["yolo2"]['iou_threshold'])
         # get base directory for writing files
         path_info_list = image_path.split('/')
         base_dir = os.getcwd()

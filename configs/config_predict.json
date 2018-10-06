@@ -3,11 +3,23 @@
       "labels": ["trees", "canopy"],
       "save_detect": true,
       "save_bb": true,
-      "sat_tif":   "data/raw/athens/athens_satellite.tif",
       "image_path":   "data/processed/athens/predict/images/",
       "bb_folder":   "data/processed/athens/predict/bb_info/",
       "detect_folder":   "data/processed/athens/predict/images_detected/",
-      "weights": "model_weights/full_yolo_tree_athens_all.h5",
-      "iou_threshold": 0.5,
-      "peak_rad": 4
+
+      "pixpeak": {
+        "sat_tif":   "data/raw/athens/athens_satellite.tif",
+        "peak_rad": 4
+      },
+
+      "yolo2": {
+        "backend": "FullYolo",
+        "weights": "model_weights/full_yolo_tree_athens_all.h5",
+        "input_size": 416,
+        "anchors": [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
+        "max_box_per_image":100,        
+        "labels": ["trees", "canopy"],
+        "freeze_backend": false,
+        "iou_threshold": 0.5
+      }
 }

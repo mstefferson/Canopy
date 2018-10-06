@@ -24,7 +24,6 @@ class YOLO(object):
                  anchors,
                  freeze_backend=False):
         self.input_size = input_size
-        
         self.labels   = list(labels)
         self.nb_class = len(self.labels)
         self.nb_box   = len(anchors)//2

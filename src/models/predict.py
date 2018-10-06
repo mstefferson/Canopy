@@ -6,19 +6,13 @@ import cv2
 import numpy as np
 import json
 import pandas as pd
-import keras_yolo2
-import pixpeak
-# from keras_yolo2 import * as yolo_pred
-# from pixpeak import * as pix_pred
-
 import sys
 import glob
 import os
-path_to_add = os.path.join( os.path.dirname( os.path.abspath(__file__)), 'keras_yolo2')
-sys.path.append(path_to_add)
-path_to_add = os.path.join( os.path.dirname( os.path.abspath(__file__)), 'pixpeak')
-sys.path.append(path_to_add)
-
+# from predict_pixpeak import main as pix_pred
+# from predict_yolo import main as yolo_pred
+import predict_pixpeak
+import predict_yolo
 
 
 def main(args):
@@ -45,26 +39,23 @@ def main(args):
     config_path = args.conf
     # build config
     with open(config_path) as config_buffer:
-        pred_config = json.load(config_buffer)
+        config = json.load(config_buffer)
     # run predictions based on  model
-    if pred_config['model'] == 'pixpeak':
+    if config['model'] == 'pixpeak':
         print('Running pixpeak')
-        pix_pred.main(config)
-    elif pred_config['model'] == 'yolo2':
+        predict_pixpeak.main(config)
+    elif config['model'] == 'yolo2':
         print('Running yolo')
-        yolo_pred(config)
+        predict_yolo.main(config)
+    else:
+        print('Do not recognize model')
 
 
 if __name__ == '__main__':
     '''
     Executeable:
-    python src/models/keras_yolo2/predict.py \
-    -c configs/config_yolo.json \
-    -w model_weights/full_yolo_tree.h5 \
-    -b true \
-    -d true \
-    -i data/processed/test/images/image_07.jpg
-
+    python src/models/predict.py \
+    -c configs/config.json \
     Credit: Code adapted from experiencor/keras-yolo2
     '''
     # set-up arg parsing

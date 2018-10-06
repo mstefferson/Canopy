@@ -1,3 +1,8 @@
+from scipy.ndimage.filters import maximum_filter
+from scipy.ndimage.morphology import generate_binary_structure, binary_erosion
+import numpy as np
+
+
 def draw_boxes(image, box_df):
     """
     Given an image, draw red pixels where the trees are located.
