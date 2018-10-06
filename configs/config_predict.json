@@ -1,11 +1,11 @@
 {
-      "model": "pixpeak",
+      "model": "yolo2",
       "labels": ["trees", "canopy"],
       "save_detect": true,
       "save_bb": true,
-      "image_path":   "data/processed/athens/predict/images/",
-      "bb_folder":   "data/processed/athens/predict/bb_info/",
-      "detect_folder":   "data/processed/athens/predict/images_detected/",
+      "image_path":   "data/processed/athens/label_100/predict/images/",
+      "bb_folder":   "data/processed/athens/label_100/predict/bb_info/",
+      "detect_folder":   "data/processed/athens/label_100/predict/images_detected/",
 
       "pixpeak": {
         "sat_tif":   "data/raw/athens/athens_satellite.tif",
@@ -18,7 +18,6 @@
         "input_size": 416,
         "anchors": [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
         "max_box_per_image":100,        
-        "labels": ["trees", "canopy"],
         "freeze_backend": false,
         "iou_threshold": 0.5
       }

@@ -9,8 +9,6 @@ import pandas as pd
 import sys
 import glob
 import os
-# from predict_pixpeak import main as pix_pred
-# from predict_yolo import main as yolo_pred
 import predict_pixpeak
 import predict_yolo
 
