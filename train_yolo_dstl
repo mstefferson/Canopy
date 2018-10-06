@@ -1,2 +1,2 @@
 #!/bin/bash
-python src/models/keras_yolo2/train.py -c configs/config_yolo_dstl.json
+python src/models/train_yolo.py -c configs/config_yolo_dstl.json
