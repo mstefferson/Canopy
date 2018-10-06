@@ -1,2 +1,2 @@
 #!/bin/bash
-python src/preprocess/clean_dstl/build_dstl.py -c configs/config_dstl.json
+python src/preprocess/clean_dstl/build_dstl.py -c configs/config_build_dstl.json
