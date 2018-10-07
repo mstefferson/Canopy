@@ -22,7 +22,7 @@
         "no_object_scale":      1.0,
         "coord_scale":          1.0,
         "class_scale":          1.0,
-        "saved_weights_name":   "model_weights/full_yolo_tree_dstl_all_anchor.h5",
+        "saved_weights_name":   "model_weights/full_yolo_tree_dstl_all.h5",
         "debug":                true
     },
 
