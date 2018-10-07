@@ -6,8 +6,8 @@ def plot_satellite_image(band_data, plant_data,
                          tree_loc=None, plot_all=True,
                          colorbands=[0, 1, 2]):
     '''
-    Description:
-        Plots the raster bands, the plant data, and tree locations
+    Plots the raster bands, the plant data, and tree locations
+
     Inputs:
         band_data (np.array, size=[r_del, c_del, 4]): The rastered image
             data for all bands
@@ -18,8 +18,13 @@ def plot_satellite_image(band_data, plant_data,
         colorbands (list of ints, optional): color bands to include in color
             image. Dafault [0, 1, 2] == [r, g, b]
         plot_all (bool, optional): plot all colors if true. If false,
+
+    Returns:
+        N/A
+
     Updates:
         N/A
+
     Write to file:
         N/A
     '''
