@@ -1,2 +1,4 @@
 #!/bin/bash
+
+# run in aws GPU computer (tensorflow p36)
 python src/models/predict.py -c configs/config_predict_dstl.json

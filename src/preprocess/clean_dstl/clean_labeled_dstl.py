@@ -9,16 +9,17 @@ import warnings
 
 def main(config, logger):
     '''
-    The yolo model does something strange to the data. This is an outstanding bug,
-        but this function is a temporary work around.
+    The yolo model does something strange to the data. This is an outstanding
+    bug, but this function is a temporary work around.
     Args:
         config (dict): loaded dstl config json. Contains image and path info
+        logger (logging object): loggin object
     Returns:
         N/A
     Update:
         N/A
     Writes to file:
-        Writes /path/2/processed/data/(train, val)/(images, labels)
+        Moves mismatches labels/images to a mismatched folder
     '''
     # make dirs
     if not os.path.exists(os.getcwd() + config["dstl"]["proc_data_rel"]):
@@ -26,21 +27,27 @@ def main(config, logger):
     # set paths
     data_path = os.getcwd() + config["dstl"]["raw_data_rel"]
     save_path = os.getcwd() + config["dstl"]["proc_data_rel"]
-    # ignore low contrast warning
-        print('Training')
-        path_images = os.getcwd() + '/data/processed/dstl/train/images'
-        path_label = os.getcwd() + '/data/processed/dstl/train/labels'
-        label_dstl.verify_image_label_match(path_images, path_label)
-        print('Valid')
-        path_images = os.getcwd() + '/data/processed/dstl/valid/images'
-        path_label = os.getcwd() + '/data/processed/dstl/valid/labels'
-        label_dstl.verify_image_label_match(path_images, path_label)
+    # clean mistmatched images/labels
+    # in training
+    logger.info('Cleaning training')
+    path_images = os.getcwd() + '/data/processed/dstl/train/images'
+    path_label = os.getcwd() + '/data/processed/dstl/train/labels'
+    n1, n2 = label_dstl.verify_image_label_match(path_images, path_label)
+    info_str = 'Found mismatch of {} images and {} labels'.format(n1, n2)
+    logger.info(info_str)
+    # in validation
+    logger.info('Cleaning validation')
+    path_images = os.getcwd() + '/data/processed/dstl/valid/images'
+    path_label = os.getcwd() + '/data/processed/dstl/valid/labels'
+    n1, n2 = label_dstl.verify_image_label_match(path_images, path_label)
+    info_str = 'Found mismatch of {} images and {} labels'.format(n1, n2)
+    logger.info(info_str)
 
 
 if __name__ == '__main__':
     '''
     Executeable:
-    python src/preprocess/clean_dstl/build_dstl_dataset.py /
+    python src/preprocess/clean_dstl/clean_label_dstl.py /
         -c configs/config_dstl.json
     '''
     # parse args

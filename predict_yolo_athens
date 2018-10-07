@@ -1,2 +1,0 @@
-#!/bin/bash
-python src/models/predict.py -c configs/config_predict_athens.json

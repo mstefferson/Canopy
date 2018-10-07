@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# run in aws GPU computer (tensorflow p36) if using
+# yolo or run in tree_bot docker if using pixpeak
+python src/models/predict.py -c configs/config_predict_athens.json
