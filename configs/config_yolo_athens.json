@@ -10,10 +10,10 @@
     },
 
     "train": {
-        "train_image_folder":   "data/processed/athens/label_100/train/images/",
-        "train_annot_folder":   "data/processed/athens/label_100/train/labels/",     
+        "train_image_folder":   "data/processed/athens/train/images/",
+        "train_annot_folder":   "data/processed/athens/train/labels/",     
         "train_times":          100,
-        "pretrained_weights":   "model_weights/full_yolo_tree_dstl_all_anchor.h5",
+        "pretrained_weights":   "model_weights/full_yolo_tree_dstl_all.h5",
         "batch_size":           16,
         "learning_rate":        1e-4,
         "nb_epochs":            25,
@@ -22,13 +22,13 @@
         "no_object_scale":      1.0,
         "coord_scale":          1.0,
         "class_scale":          1.0,
-        "saved_weights_name":   "model_weights/full_yolo_tree_athens_all_anchor.h5",
+        "saved_weights_name":   "model_weights/full_yolo_tree_athens_all.h5",
         "debug":                true
     },
 
     "valid": {
-        "valid_image_folder":   "data/processed/athens/label_100/valid/images/",
-        "valid_annot_folder":   "data/processed/athens/label_100/valid/labels/",     
+        "valid_image_folder":   "data/processed/athens/valid/images/",
+        "valid_annot_folder":   "data/processed/athens/valid/labels/",     
         "valid_times":          1
     }
 }
