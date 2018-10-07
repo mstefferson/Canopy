@@ -30,3 +30,6 @@ Untitled.ipynb
 model_weights/
 train_info/
 
+# save example images
+!static/*
+

@@ -39,7 +39,7 @@ def main(args):
     with open(config_path) as config_buffer:
         config = json.load(config_buffer)
     # run predictions based on  model
-    if config['model'] == 'pixpeak':
+    if config['model'] == 'pixelpeak':
         print('Running pixpeak')
         predict_pixpeak.main(config)
     elif config['model'] == 'yolo2':

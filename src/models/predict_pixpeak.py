@@ -79,7 +79,7 @@ def main(config):
         files_2_pred = glob.glob(pred_path + '*')
     print('Predicting objects on files', files_2_pred)
     # get sat data
-    sat_data = rasterio.open(config["pixpeak"]["sat_tif"])
+    sat_data = rasterio.open(config["pixelpeak"]["sat_tif"])
     # loop over all files
     for image_path in files_2_pred:
         # get r,c from file

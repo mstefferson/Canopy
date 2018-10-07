@@ -1,13 +1,13 @@
 {
-      "model": "yolo2",
+      "model": "pixelpeak",
       "labels": ["trees", "canopy"],
       "save_detect": true,
       "save_bb": true,
-      "image_path":   "data/processed/athens/label_100/predict/images/",
-      "bb_folder":   "data/processed/athens/label_100/predict/bb_info/",
-      "detect_folder":   "data/processed/athens/label_100/predict/images_detected/",
+      "image_path":   "data/processed/athens/predict/images/",
+      "bb_folder":   "data/processed/athens/predict/bb_info/",
+      "detect_folder":   "data/processed/athens/predict/images_detected/",
 
-      "pixpeak": {
+      "pixelpeak": {
         "sat_tif":   "data/raw/athens/athens_satellite.tif",
         "peak_rad": 4
       },
