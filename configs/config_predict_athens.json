@@ -16,7 +16,7 @@
         "backend": "FullYolo",
         "weights": "model_weights/full_yolo_tree_athens_all.h5",
         "input_size": 416,
-        "anchors": [0.57273, 0.677385, 1.87446, 2.06253, 3.33843, 5.47434, 7.88282, 3.52778, 9.77052, 9.16828],
+        "anchors": [0.57, 0.55, 1.09, 1.05, 1.91, 4.36, 2.07, 1.90, 5.71, 6.11],
         "max_box_per_image":100,        
         "freeze_backend": false,
         "iou_threshold": 0.5
