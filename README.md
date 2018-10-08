@@ -178,3 +178,6 @@ The a snapshot of final csv file looks something like this:
 
 Here r,c\_global is the location of the images origin in the tif file, lon is longitude, lat is latitude, w\_meter is the tree width in meters, h\_meter is the tree height in meters/ 
 
+## Sandbox
+ Take a look at this  [example notebook](https://github.com/mstefferson/Canopy/notebooks/pixpeak_from_tif_demo.ipynb) to see how to interact with a tif file, get a subset of data from it, run pixel_peak interactively and some visualization of results.
+ 
