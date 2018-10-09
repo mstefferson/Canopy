@@ -2,11 +2,12 @@
 ![A nice tree](./static/tree.jpg)
 
 ## How machine learning can keep cities green
-Cities receive enormous beenfits from the trees within them---from carbon sequestration to quality of life improvement---and these benefits diretly lead to finacial returns for a city. To maximize these returns, cities have to conduct a tree census, which requires thousands of man hours. I've built a platform for automating this process by detecting trees from satellite images.
+Cities receive enormous beenfits from the trees within them---from carbon sequestration to quality of life improvement---and these benefits diretly lead to finacial returns for a city. To maximize these returns, cities conduct tree censuses, which require thousands of man hours. I've built a platform for automating this process by detecting trees from satellite images.
 
 
 This repo contains code to predict the locations of trees from a satellite tif image. This work was for a consulting project for the city of Athens, Greece, which I worked on as an Insight AI Fellow. My google slide presentation can be found [here](https://docs.google.com/presentation/d/1hJy6QlZ1l-aOmU88pd-6kLe2fV3JfEG0gt8AKGEz_qs/edit?usp=sharing).
 
+I have designed a pipeline for analyzing 4-channel GIS satellite images (tif files) that other cities and engineers should feel free to use!
 
 ## Setup
 Clone the repository
@@ -15,7 +16,7 @@ git clone https://github.com/mstefferson/AutomatedTreeCensus
 ```
 
 ### Building info
-In order to interact with satellite data (both GIS and tif images), we need to use GDAL (Geospatial Data Abstraction Library). I found the installation of this to be a bit of a pain, so I build a docker image. With the exception of training on a AWS GPU node, all code should be ran through the docker image. More details on training vs processing below.
+In order to interact with satellite data (both GIS shape files and tif images), we need to use GDAL (Geospatial Data Abstraction Library). I found the installation of this to be a bit of a pain, so I built a docker image. With the exception of training on a AWS GPU node, all code should be ran through the docker image. More details on training vs processing below.
 
 This docker image is built from thinkwhere/gdal-python. It contains GDAL and many geospatial python libraries. It also supports jupyter notebooks. 
 
@@ -46,6 +47,22 @@ To run a jupyter notebook
 ```
 
 Note, the docker container is removed when exiting.
+
+###  AWS set-up
+
+I ran all training on an AWD instance: Deep Learning AMI (Ubuntu) Version 13.0 - ami-00499ff523cc859e6. I used GPU Compute node, p2.xlarge
+
+Make sure the paths in the config file configs/config_yolo.json the paths should be relative to the current working director. **Do not put the full path.** The code handles the path up to the working directory. If the working directory is /path/2/wd/ and the data is located in wd/path/2/data, the 'path/2/data' should go in the config file.  
+
+
+Start up a keras environment on an AWS.
+
+```
+source activate tensorflow-p36
+pip -r build/requirements_aws.txt
+```
+
+
 
 ## Data
 ### Satellite tif
@@ -100,23 +117,9 @@ I have implemented a keras version of yolo_v2, which I adapted, with edits, from
 
 The labels for training/prediction are "trees, canopy".
 
-### Set-up
-
-I ran all training on an AWD instance: Deep Learning AMI (Ubuntu) Version 13.0 - ami-00499ff523cc859e6. I used GPU Compute node, p2.xlarge
-
-Make sure the paths in the config file configs/config_yolo.json the paths should be relative to the current working director. **Do not put the full path.** The code handles the path up to the working directory. If the working directory is /path/2/wd/ and the data is located in wd/path/2/data, the 'path/2/data' should go in the config file.  
-
-
-Start up a keras environment on an AWS.
-
-```
-source activate tensorflow-p36
-pip -r build/requirements_aws.txt
-```
-
 ### YOLO
 
-If you'd like, you can create new anchor boxes for the yolo model (or use mine). To
+All training for YOLO was done on the AWS GPU node (see set-up). If you'd like, you can create new anchor boxes for the yolo model (or use mine). To
 create new anchor boxes, open up a shell in docker and run
 ```
 src/models/gen_anchors_yolo.py -c configs/config_yolo_(dstl,athens).json
@@ -147,23 +150,25 @@ If you'd like pretrained weights, please send me a message
 There are two models for prediction: pixelpeak and yolo2. These can be edited the prediction config config\_predict\_athens.json. 
 
 ### pixelpeak
-![pixelpeak predictions](./static/image_pixelpeak_example.jpg)
-
 In configs/config\_predict\_athens.json, change the model to "pixelpeak". pixelpeak only finds tree locations and no info on the size of the tree.
 
 ```
 ./executeables/predict_athens
 ```
 
-### YOLOv2
-![yolo predictions](./static/image_yolo_example.jpg)
+Here is a sample output from pixelpeak:
 
+![pixelpeak predictions](./static/image_pixelpeak_example.jpg)
+### YOLOv2
 In configs/config_predict_athens.json, change the model to "yolo2". yolo2 finds "trees, canopy" classes locations and bounding box info
 
 ```
 ./executeables/predict_athens
 ```
 
+Here is a sample output from YOLOv2:
+
+![yolo predictions](./static/image_yolo_example.jpg)
 
 ## Compiling outputs
 The predictions are saved in /path/2/data/predict/bb\_info. This data can be compiled and stored in a csv. Edit the config file configs/config\_satfile.json to make sure your paths are correct.
@@ -179,5 +184,5 @@ The a snapshot of final csv file looks something like this:
 Here r,c\_global is the location of the images origin in the tif file, lon is longitude, lat is latitude, w\_meter is the tree width in meters, h\_meter is the tree height in meters/ 
 
 ## Sandbox
- Take a look at this  [example notebook](https://github.com/mstefferson/Canopy/notebooks/pixpeak_from_tif_demo.ipynb) to see how to interact with a tif file, get a subset of data from it, run pixel_peak interactively and some visualization of results.
+ Take a look at this  [example notebook](https://github.com/mstefferson/Canopy/blob/master/notebooks/pixpeak_from_tif_demo.ipynb) to see how to interact with a tif file, get a subset of data from it, run pixel_peak interactively and some visualization of results.
  
