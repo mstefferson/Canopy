@@ -2,7 +2,7 @@ import sys
 import argparse
 import json
 sys.path.insert(0, "src")
-import sat_class
+from sat_utils.sat_class import SatelliteTif
 
 
 def main(config):
@@ -24,7 +24,7 @@ def main(config):
     '''
     # get params
     # collect it
-    sat_master = sat_class.SatelliteTif(
+    sat_master = SatelliteTif(
         tif_file=config["sat_info"]["tif_file"],
         rel_path_2_data=config["sat_info"]["processed_data_path"],
         rel_path_2_output=config["sat_info"]["output_path"],

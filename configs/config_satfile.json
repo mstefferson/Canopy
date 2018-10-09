@@ -2,8 +2,8 @@
   "build_info":{
     "warnings": true,
     "erase": false,
-    "train": false,
-    "valid": false,
+    "train": true,
+    "valid": true,
     "predict": true
   },
   "sat_info":{
