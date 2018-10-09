@@ -52,8 +52,7 @@ Note, the docker container is removed when exiting.
 
 I ran all training on an AWD instance: Deep Learning AMI (Ubuntu) Version 13.0 - ami-00499ff523cc859e6. I used GPU Compute node, p2.xlarge
 
-Make sure the paths in the config file configs/config_yolo.json the paths should be relative to the current working director. **Do not put the full path.** The code handles the path up to the working directory. If the working directory is /path/2/wd/ and the data is located in wd/path/2/data, the 'path/2/data' should go in the config file.  
-
+Make sure the paths in the config file configs/config\_yolo*.json the paths should be relative to the current working director. **Do not put the full path.** The code handles the path up to the working directory. If the working directory is /path/2/wd/ and the data is located in wd/path/2/data, the 'path/2/data' should go in the config file.
 
 Start up a keras environment on an AWS.
 
@@ -71,19 +70,21 @@ The raw data I was given was a single tif file with four channel's (R, G, B, IR)
 It should be straightward to use this repo on new satellite data in the form of a .tif file. I self-labeled 100 400x400x3 (r,g, IR) images.  To label data, I used [labelImg](https://github.com/tzutalin/labelImg).
 
 ### DSTL
-Unless you have a to of pre-trained daya, I'd recommend pretraining on Kaggle's DSTL
+Unless you have a ton of pre-labeled data, I'd recommend pretraining on Kaggle's DSTL
 [Kaggle's DSTL challenge](https://www.kaggle.com/c/dstl-satellite-imagery-feature-detection) if you're using the yolo2 model. 
 
 
 
 #### Prepping DSTL data
 
-This repo can take the DSTL, and process it to a useable format for training. It breaks up the giant tif files into smaller pngs and grabs the labels out of the geojson files and puts them into a usable format. Currently, the model uses VOC label format, but the code can produce YOLO label format as well. 
+This repo can take the DSTL, and process it to a useable format for training. It breaks up the giant tif files into smaller pngs, grabs the labels out of the geojson files, and puts them into a usable format. Currently, the model uses VOC label format, but the code can produce YOLO label format as well.
+
+To prep data:
 
 - Download the DSTL [data](https://www.kaggle.com/c/dstl-satellite-imagery-feature-detection/data)
 - Unzip and place all of the contents in the data path of your liking. I recommend data/raw/dstl
 - Feel free to delete the 16 band data, I don't use it
-- Edit config file, configs/config_build_dstl.json so that it includes the correct paths
+- Edit config file, configs/config\_build\_dstl.json so that it includes the correct paths
 - Start a Docker container
 - Run the code to clean the data
 
@@ -107,7 +108,7 @@ To build a predict, train, validation set, simply edit configs/config_satfile.js
 ./executeables/build_tif_dataset
 ```
 
-- I self labeled 100 images for "trees" and "canopy" for my dataset using [labelImg](https://github.com/tzutalin/labelImg).
+- I self labeled 100 images for "trees" and "canopy" for my dataset using [labelImg](https://github.com/tzutalin/labelImg). An example is show below:
 
 ![yolo predictions](./static/self_labeled.png)
 
@@ -115,28 +116,28 @@ To build a predict, train, validation set, simply edit configs/config_satfile.js
 
 I have implemented a keras version of yolo_v2, which I adapted, with edits, from [experiencor/keras-yolo2](https://github.com/experiencor/keras-yolo2). I implemented the updated [loss function](https://github.com/experiencor/keras-yolo2/issues/353) as well as documented and added additional features to the code. For backend weights, see their github page.
 
-The labels for training/prediction are "trees, canopy".
+The labels for training/prediction are "trees, canopy". Make sure to train on a GPU node! See my AWS instructions above.
 
 ### YOLO
 
 All training for YOLO was done on the AWS GPU node (see set-up). If you'd like, you can create new anchor boxes for the yolo model (or use mine). To
 create new anchor boxes, open up a shell in docker and run
 ```
-src/models/gen_anchors_yolo.py -c configs/config_yolo_(dstl,athens).json
+python src/models/gen_anchors_yolo.py -c configs/config_yolo_(dstl,athens).json
 ```
 Copy and paste the output into the anchor box input in the config file
 
 Now we ready to train. 
 
 #### Train on dstl
-The config file for training is config\_yolo\_dstl.json. This should be edited to have the correct paths and weight paths.
+The config file for training is config\_yolo\_dstl.json. This should be edited to have the correct paths and weight paths. Once editted, run:
 
 ```
 ./executeables/train_yolo_dstl
 ```
 
 #### Train on satfile
-Edit configs/config\_yolo\_athens.json to your paths and save names.
+Edit configs/config\_yolo\_athens.json to your paths and save names.  Once editted, run:
 
 ```
 ./executeables/train_yolo_athens
@@ -160,7 +161,7 @@ Here is a sample output from pixelpeak:
 
 ![pixelpeak predictions](./static/image_pixelpeak_example.jpg)
 ### YOLOv2
-In configs/config_predict_athens.json, change the model to "yolo2". yolo2 finds "trees, canopy" classes locations and bounding box info
+In configs/config\_predict\_athens.json, change the model to "yolo2". yolo2 finds "trees, canopy" classes locations and bounding box info
 
 ```
 ./executeables/predict_athens
@@ -181,7 +182,7 @@ The a snapshot of final csv file looks something like this:
 
 ![yolo predictions](./static/tree_csv_example.png)
 
-Here r,c\_global is the location of the images origin in the tif file, lon is longitude, lat is latitude, w\_meter is the tree width in meters, h\_meter is the tree height in meters/ 
+Here r,c\_global is the location of the images origin in the tif file, lon is longitude, lat is latitude, w\_meter is the tree width in meters, h\_meter is the tree height in meters.
 
 ## Sandbox
  Take a look at this  [example notebook](https://github.com/mstefferson/Canopy/blob/master/notebooks/pixpeak_from_tif_demo.ipynb) to see how to interact with a tif file, get a subset of data from it, run pixel_peak interactively and some visualization of results.
