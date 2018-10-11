@@ -8,8 +8,7 @@
       "detect_folder":   "data/processed/dstl/predict/images_detected/",
 
       "pixpeak": {
-        "sat_tif":   "data/raw/athens/athens_satellite.tif",
-        "peak_rad": 4
+        "sat_tif":   "data/raw/athens/athens_satellite.tif"
       },
 
       "yolo2": {

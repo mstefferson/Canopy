@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# if using pixpeak (in config), run in docker
+# if using yolo2 (in config), run on AWS (environment tensorflow p36)
+python src/models/predict.py -c configs/config_predict_example.json

@@ -1,52 +1,72 @@
 # Canopy: an automated tree census
-![A nice tree](./static/tree.jpg)
+![A nice tree](./static/pipeline.png)
+
+A google slide presentation for my Insight project can be found [here](https://docs.google.com/presentation/d/1hJy6QlZ1l-aOmU88pd-6kLe2fV3JfEG0gt8AKGEz_qs/edit?usp=sharing).
+
+## Setup
+Clone the repository and start the docker image. If you do not have docker, follow the [download instructions](https://docs.docker.com/install/).
+
+```
+> git clone https://github.com/mstefferson/Canopy
+> cd Canopy
+> docker pull mstefferson/tree_bot:latest
+> ./run_docker
+```
+
+## Test inference
+Run a test inference on the example data set
+
+Build sample dataset from tif
+
+```
+./executeables/build_tif_dataset_example
+```
+
+Run pixpeak detection (no training needed)
+
+```
+./executeables/predict_example
+```
+
+Compile results into a .csv
+
+```
+./executeables/compile_results_example
+```
+
+when exiting.
+
+
 
 ## How machine learning can keep cities green
 Cities receive enormous beenfits from the trees within them---from carbon sequestration to quality of life improvement---and these benefits diretly lead to finacial returns for a city. To maximize these returns, cities conduct tree censuses, which require thousands of man hours. I've built a platform for automating this process by detecting trees from satellite images.
 
 
-This repo contains code to predict the locations of trees from a satellite tif image. This work was for a consulting project for the city of Athens, Greece, which I worked on as an Insight AI Fellow. My google slide presentation can be found [here](https://docs.google.com/presentation/d/1hJy6QlZ1l-aOmU88pd-6kLe2fV3JfEG0gt8AKGEz_qs/edit?usp=sharing).
-
+This repo contains code to predict the locations of trees from a satellite tif image. This work was for a consulting project for the city of Athens, Greece, which I worked on as an Insight AI Fellow. 
 I have designed a pipeline for analyzing 4-channel GIS satellite images (tif files) that other cities and engineers should feel free to use!
 
-## Setup
-Clone the repository
-```
-git clone https://github.com/mstefferson/AutomatedTreeCensus
-```
 
-### Building info
+
+### Build info
 In order to interact with satellite data (both GIS shape files and tif images), we need to use GDAL (Geospatial Data Abstraction Library). I found the installation of this to be a bit of a pain, so I built a docker image. With the exception of training on a AWS GPU node, all code should be ran through the docker image. More details on training vs processing below.
 
 This docker image is built from thinkwhere/gdal-python. It contains GDAL and many geospatial python libraries. It also supports jupyter notebooks. 
 
-### Docker
+
 With the exception of GPU training, building the docker image, and starting up a Docker container, all code should be ran within a Docker container. The docker images mounts the WD into the container.
 
-#### Get docker image
-Pull the docker image from my docker hub
-
-```
-docker pull mstefferson/tree_bot:latest
-```
-Or build it using the docker file (done through a bash script)
+The instructions above can pulls the docker image from my docker hub. It can also be built using using the docker file
 
 ``` bash
 ./build_docker
 ```
-#### Run docker image
-To run a bash shell
-
-```
-./run_docker
-```
-To run a jupyter notebook
+If you want use a jupyter notebook, simplying run the following bash script:
 
 ``` bash
 ./run_docker_jn
 ```
 
-Note, the docker container is removed when exiting.
+Note, the docker container is removed 
 
 ###  AWS set-up
 

@@ -1,0 +1,23 @@
+{
+      "model": "pixelpeak",
+      "labels": ["trees", "canopy"],
+      "save_detect": true,
+      "save_bb": true,
+      "image_path":   "data/processed/example/predict/images/",
+      "bb_folder":   "data/processed/example/predict/bb_info/",
+      "detect_folder":   "data/processed/athens/example/images_detected/",
+
+      "pixelpeak": {
+        "sat_tif":   "data/raw/example/example_sat_data.tif"
+      },
+
+      "yolo2": {
+        "backend": "FullYolo",
+        "weights": "model_weights/full_yolo_tree_athens_all.h5",
+        "input_size": 416,
+        "anchors": [0.57, 0.55, 1.09, 1.05, 1.91, 4.36, 2.07, 1.90, 5.71, 6.11],
+        "max_box_per_image":100,        
+        "freeze_backend": false,
+        "iou_threshold": 0.5
+      }
+}

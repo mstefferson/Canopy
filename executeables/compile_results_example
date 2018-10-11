@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# run in tree_bot docker
+python src/postprocess/compile_prediction.py -c configs/config_satfile_example.json
