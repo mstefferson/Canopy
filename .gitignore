@@ -1,6 +1,5 @@
 # Data
 data/raw/*
-data/*
 data/processed/*
 config.yaml
 
@@ -35,4 +34,4 @@ train_info/
 
 # save example images and data
 !static/*
-!data/raw/example_sat_data.tif
+!data/raw/example/example_sat_data.tif
