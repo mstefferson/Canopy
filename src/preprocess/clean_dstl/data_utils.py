@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw
 from skimage.external import tifffile
 from skimage.io import imread
 from skimage.transform import resize
-from sklearn.model_selection import train_test_split 
+from sklearn.model_selection import train_test_split
 import glob
 import os
 
@@ -58,7 +58,8 @@ class RawObjImage(pipe_utils.SatelliteImage):
         Args
         ----
         labels (list) : list of ints corresponding to feature names
-        as_poly (bool) : plot the feature as a polygon instead of a bounding box
+        as_poly (bool) : plot the feature as a polygon instead of a
+            bounding box
         """
 
         labels = pipe_utils.atleast_list(labels)
@@ -90,7 +91,8 @@ def read_raw_image(path, report=True, check_data=False):
 
     Raises
     ------
-    ImportError : If the image passed does not have a file extension that's expected
+    ImportError : If the image passed does not have a file extension
+        that's expected
     AssertionError : if data_is_ok fails when check_data=True
 
     Returns
@@ -146,7 +148,7 @@ def load_from_categorized_directory(path, load_labels):
                 # or .png was in the directory, just skip
                 #
                 # WARNING: this is going on faith that read_raw_image wont
-                # raise an error for other reasons... that's probably not a 
+                # raise an error for other reasons... that's probably not a
                 # good assumption
                 pass
             else:
@@ -204,17 +206,17 @@ def generarate_train_and_test(data, path=None, save=False):
 
 
 def convert_classes(raw_data, local_label_dict):
-    """Convert the MC Land use classes to the specific things I'm interested in 
+    """Convert the MC Land use classes to the specific things I'm interested in
 
     Args
     ----
     raw_data (dict) : dictionary of raw data, returned from load_raw_data()
-    local_label_dict (dict) : a dictionary that maps the datasets labels into 
+    local_label_dict (dict) : a dictionary that maps the datasets labels into
         the labels used by the model
 
     Returns
     -------
-    Similar dictionary but with labels of specific interest 
+    Similar dictionary but with labels of specific interest
     """
 
     data = {}
@@ -232,7 +234,7 @@ def process_patch_for_saving(ds):
 
     Args
     ----
-    ds (dict) : 
+    ds (dict) :
 
     Returns
     -------
@@ -243,7 +245,7 @@ def process_patch_for_saving(ds):
     for label, full_images in ds.items():
 
         for full_image in full_images:
-            image = resize(full_image, (200,200), preserve_range=True)
+            image = resize(full_image, (200, 200), preserve_range=True)
             clean_ds.setdefault(label, []).append(image)
 
     return clean_ds

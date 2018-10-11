@@ -24,7 +24,8 @@ class ObjImage(utils.SatelliteImage):
     _image_id (str) : a unique identifier for the image, if the image is saves
     this becomes the file name
     _features ( {label: [(int, int, int, int), ...], ...}) : (optional)
-        object features in the image, this property isn't used with patch images
+        object features in the image, this property isn't used with patch
+        images
     """
 
     def __init__(self, image_path=None, data=None, *args, **kwargs):
@@ -44,7 +45,8 @@ class ObjImage(utils.SatelliteImage):
             _data = data
             _image_id = None
 
-        super().__init__(data=_data, image_id=_image_id, use='obj', *args, **kwargs)
+        super().__init__(data=_data, image_id=_image_id, use='obj',
+                         *args, **kwargs)
 
     def get_features(self):
         """Return all the features associated with the image
@@ -146,7 +148,7 @@ def load_data(annotations_file, max_images=100):
 
 
 if __name__ == '__main__':
-    data_path =  os.getcwd() + "/data/processed/dstl/annotations/"
+    data_path = os.getcwd() + "/data/processed/dstl/annotations/"
     ds = load_data(data_path + 'annotations.csv')
 
     for data in ds:

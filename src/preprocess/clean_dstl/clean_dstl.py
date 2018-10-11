@@ -1,6 +1,6 @@
 """This script handles pulling in the data from the kaggle competition
 from DSTL, cleaning it, and saving it in a format that's
-appropriate to be read in by the keras-retinanet model 
+appropriate to be read in by the keras-retinanet model
 
 Warning
 -------
@@ -75,7 +75,8 @@ class DSTLImage:
     _xmax (float) : the xmax scaling value found from grid_sz
     _ymin (float) : the ymin scaling value found from grid_sz
     _data (array : float) : image data of shape _W x _H x 3
-    _features (dict : list) : a list of all polygons vertices to plot for each feature
+    _features (dict : list) : a list of all polygons vertices to plot for
+        each feature
 
     """
 
@@ -107,7 +108,8 @@ class DSTLImage:
         self._H = _H**2 / (_H + 1)
 
         # save the xmax and ymin values to resize the mask correctly
-        _, self._xmax, self._ymin = self.grid_sizes[self.grid_sizes.image == self._image_id].values[0]
+        _, self._xmax, self._ymin = self.grid_sizes[
+            self.grid_sizes.image == self._image_id].values[0]
 
         print("loading json file")
         self._features = self._parse_geojson(self.geojson_path)
@@ -160,7 +162,7 @@ class DSTLImage:
         features = {}
 
         # convert form dstl coors to pixels
-        coor_to_px = lambda coor: (
+        def coor_to_px(coor): return(
             coor[0] / self._xmax * self._W,
             coor[1] / self._ymin * self._H
         )
@@ -250,7 +252,8 @@ class DSTLImage:
 
         for label in labels:
 
-            for loc in self.get_feature_locations(label=label, as_bbox=as_bbox):
+            for loc in self.get_feature_locations(label=label,
+                                                  as_bbox=as_bbox):
                 if as_bbox:
                     x1, y1, x2, y2 = loc
                     xy = (x1, y1)
@@ -307,10 +310,13 @@ def __transform_coors(coor, i, j, xstride, ystride):
     dy = y2 - y1
     A = dx * dy
 
-    inframe = lambda e, stride, n: e // stride == n
-    new_e = lambda e, stride: e % stride
+    # Def some functions
+    def inframe(e, stride, n): return e // stride == n
 
-    if (inframe(x1, xstride, i) and inframe(y1, ystride, j)) or (inframe(x2, xstride, i) and inframe(y2, ystride, j)):
+    def new_e(e, stride): return e % stride
+
+    if (inframe(x1, xstride, i) and inframe(y1, ystride, j)) \
+       or (inframe(x2, xstride, i) and inframe(y2, ystride, j)):
 
         if inframe(x1, xstride, i):
             x1_prime = int(new_e(x1, xstride))
@@ -363,7 +369,8 @@ def __transform_and_collect_features(dstl_image, stride, blocks_shape):
     ignored_fet = 0
 
     for label in dstl_image.has_labels():
-        for feature in dstl_image.get_feature_locations(label=label, as_bbox=True):
+        for feature in dstl_image.get_feature_locations(label=label,
+                                                        as_bbox=True):
             x1, y1, x2, y2 = feature
             x_center = (x2 + x1) / 2
             y_center = (y2 + y1) / 2
@@ -377,7 +384,8 @@ def __transform_and_collect_features(dstl_image, stride, blocks_shape):
             iblock = int(x_center // xstride)
             jblock = int(y_center // ystride)
 
-            new_coors = __transform_coors(feature, iblock, jblock, xstride, ystride)
+            new_coors = __transform_coors(feature, iblock,
+                                          jblock, xstride, ystride)
 
             if new_coors is not None:
                 block_tag = "{}_{}".format(iblock, jblock)
@@ -387,23 +395,6 @@ def __transform_and_collect_features(dstl_image, stride, blocks_shape):
             else:
                 ignored_fet += 1
                 print('{0} features ignored'.format(ignored_fet))
-
-            # if iblock <= imx and jblock <= jmx:
-            #     #  block_tag = "{}_{}".format(iblock, jblock)
-            #     #  x1_prime = int(x1 % xstride)
-            #     #  y1_prime = int(y1 % ystride)
-            #     #  x2_prime = int(x2 % xstride)
-            #     #  y2_prime = int(y2 % ystride)
-
-            #     collection.setdefault(block_tag, {})
-            #     collection[block_tag].setdefault(label, [])
-            #     collection[block_tag][label].append(
-            #         [x1_prime, y1_prime, x2_prime, y2_prime]
-            #     )
-
-            # else:
-            #     ignored_fet += 1
-            #     print('{0} features ignored'.format(ignored_fet))
 
     return collection
 
@@ -446,9 +437,9 @@ def process_dstl_directory(dir_path,
     """For a directory of DSTL images, import and process into acceptable model
     format
 
-    Generate a directory of chunked images. i.e. split larget images into smaller
-    blocks, transform the features into the new pixel coordinates, and save into
-    and annotations file to be read by retinanet
+    Generate a directory of chunked images. i.e. split larget images into
+    smaller blocks, transform the features into the new pixel coordinates,
+    and save into an annotations file to be read by retinanet
 
     Args
     ----
@@ -465,7 +456,8 @@ def process_dstl_directory(dir_path,
         print("Creating directory to save annotation file")
         os.makedirs(annotations_save_dir)
 
-    annotations_save_path = os.path.join(annotations_save_dir, 'annotations.csv')
+    annotations_save_path = os.path.join(annotations_save_dir,
+                                         'annotations.csv')
     loader = dstl_loader(geojson_dir=geojson_dir, grid_sizes=grid_sizes)
 
     with open(annotations_save_path, 'w+') as csv_file:
@@ -535,7 +527,8 @@ def dstl_processor(block_shape, image_save_dir, annotation_writer):
                 block_id = "{}__{}".format(dstl_image.image_id, block_tag)
 
                 # Save the image
-                block_img_path = os.path.join(image_save_dir, block_id + '.png')
+                block_img_path = os.path.join(image_save_dir,
+                                              block_id + '.png')
                 skio.imsave(block_img_path, blocks[j, i, 0, ...])
 
                 # Save annotations
@@ -581,16 +574,15 @@ def main(config):
     Update:
         N/A
     Writes to file:
-        Writes /path/2/processed/data/chopped_data/ and 
+        Writes /path/2/processed/data/chopped_data/ and
             /path/2/processed/data/chopped_data/
     '''
     # set paths
     data_path = os.getcwd() + config["dstl"]["raw_data_rel"]
-    save_path = os.getcwd() + config["dstl"]["proc_data_rel"]    
+    save_path = os.getcwd() + config["dstl"]["proc_data_rel"]
     geojson_dir = data_path + "train_geojson_v3/"
     grid_file = data_path + "grid_sizes.csv"
     grid_sizes = import_grid_sizes(grid_file)
-
 
     # process the images
     process_dstl_directory(

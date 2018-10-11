@@ -41,7 +41,8 @@ class SatelliteImage:
     ----------
     _data (np.array) : image data
     _features ( {label: [(int, int, int, int), ...], ...}) : (optional)
-        object features in the image, this property isn't used with patch images
+        object features in the image, this property isn't used with patch
+        images
     _image_id (str) : a identifier to describe the image
     """
 
@@ -207,7 +208,8 @@ def chop_to_blocks(data, shape):
 def as_batch(img, shape, as_list=False):
     """Convert an image block group to a list
 
-    After chop_to_blocks, the data has a structure like (jx, ix, 1, 400, 400, 3)
+    After chop_to_blocks, the data has a structure like
+        (jx, ix, 1, 400, 400, 3)
     convert this to:
 
     obj_detection : (ix*jx, 400, 400, 3)
