@@ -7,10 +7,10 @@ A google slide presentation for my Insight project can be found [here](https://d
 Clone the repository and start the docker image. If you do not have docker, follow the [download instructions](https://docs.docker.com/install/).
 
 ```
-> git clone https://github.com/mstefferson/Canopy
-> cd Canopy
-> docker pull mstefferson/tree_bot:latest
-> ./run_docker
+git clone https://github.com/mstefferson/Canopy
+cd Canopy
+docker pull mstefferson/tree_bot:latest
+./run_docker
 ```
 
 Additional info can be found in the [Additional build info](#add_build_info) section.
