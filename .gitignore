@@ -1,5 +1,7 @@
 # Data
-data/
+data/raw/*
+data/*
+data/processed/*
 config.yaml
 
 # cached/accessory
@@ -16,6 +18,7 @@ notes.txt
 *jpg
 *tif
 *xml
+*zip
 tree_locations/
 notebooks/Scratch.ipynb
 Untitled*ipynb
@@ -30,6 +33,6 @@ Untitled*ipynb
 model_weights/
 train_info/
 
-# save example images
+# save example images and data
 !static/*
-
+!data/raw/example_sat_data.tif
