@@ -5,7 +5,7 @@
       "save_bb": true,
       "image_path":   "data/processed/example/predict/images/",
       "bb_folder":   "data/processed/example/predict/bb_info/",
-      "detect_folder":   "data/processed/athens/example/images_detected/",
+      "detect_folder":   "data/processed/example/predict/images_detected/",
 
       "pixelpeak": {
         "sat_tif":   "data/raw/example/example_sat_data.tif"
