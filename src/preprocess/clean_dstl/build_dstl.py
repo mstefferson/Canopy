@@ -48,17 +48,10 @@ def main(config, logger):
                 block_shape=(config["dstl"]["imag_h"],
                              config["dstl"]["imag_w"], 3)
             )
-        logger.info('Processed all data')
-        # run label_dstl main
-        label_dstl.main(config, logger)
-        print('Training')
-        path_images = os.getcwd() + '/data/processed/dstl/train/images'
-        path_label = os.getcwd() + '/data/processed/dstl/train/labels'
-        label_dstl.verify_image_label_match(path_images, path_label)
-        print('Valid')
-        path_images = os.getcwd() + '/data/processed/dstl/valid/images'
-        path_label = os.getcwd() + '/data/processed/dstl/valid/labels'
-        label_dstl.verify_image_label_match(path_images, path_label)
+    logger.info('Processed all data')
+    logger.info('Starting logging')
+    # run label_dstl main
+    label_dstl.main(config, logger)
 
 
 if __name__ == '__main__':

@@ -264,6 +264,8 @@ def verify_image_label_match(image_path, label_path):
         error_str = "Error! Images and labels don't match"
         raise RuntimeError(error_str)
     # make dirs
+    print(base_path1)
+    print(base_path2)
     move_dir1 = base_path1 + '/mistmatch/images/'
     move_dir2 = base_path1 + '/mistmatch/labels/'
     dirs2make = [move_dir1, move_dir2]
@@ -396,13 +398,13 @@ def main(config, logger):
     logger.info('Move to train/val')
     # verify labeles/images match. Temp solution to bug
     image_path = path2data + 'train/images/'
-    label_path = path2data + 'train/images/'
+    label_path = path2data + 'train/labels/'
     ne1, ne2 = verify_image_label_match(image_path, label_path)
     str2log = ('Verified train excess image: '
                + str(ne1) + ' excess lab: ' + str(ne2))
     logger.info(str2log)
     image_path = path2data + 'valid/images/'
-    label_path = path2data + 'valid/images/'
+    label_path = path2data + 'valid/labels/'
     ne1, ne2 = verify_image_label_match(image_path, label_path)
     str2log = ('Verified valid excess image: '
                + str(ne1) + ' excess lab: ' + str(ne2))

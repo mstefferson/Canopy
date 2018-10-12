@@ -460,7 +460,7 @@ def process_dstl_directory(dir_path,
                                          'annotations.csv')
     loader = dstl_loader(geojson_dir=geojson_dir, grid_sizes=grid_sizes)
 
-    with open(annotations_save_path, 'w+') as csv_file:
+    with open(annotations_save_path, 'a+') as csv_file:
 
         csvwriter = csv.writer(csv_file)
         processor = dstl_processor(
