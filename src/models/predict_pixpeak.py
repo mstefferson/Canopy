@@ -77,7 +77,7 @@ def main(config):
         files_2_pred = [pred_path]
     else:
         files_2_pred = glob.glob(pred_path + '*')
-    print('Predicting objects on files', files_2_pred)
+    print('Predicting objects on {} files'.format(len(files_2_pred)))
     # get sat data
     sat_data = rasterio.open(config["pixelpeak"]["sat_tif"])
     # loop over all files

@@ -122,6 +122,7 @@ class SatelliteTif():
             N/A
         '''
         # build a list of all bounding boxes
+        print('Collecting from', self.pred_collect_dir)
         files = glob.glob(self.pred_collect_dir + '/*csv')
         df_columns = ['fname_full', 'fname', 'label', 'imag_w', 'imag_h',
                       'x', 'y', 'w', 'h', 'conf',
@@ -130,7 +131,9 @@ class SatelliteTif():
                       'c_global', 'lon', 'lat', 'w_meter', 'h_meter']
         file_cols = ['label', 'imag_w', 'imag_h', 'x', 'y', 'w', 'h', 'conf']
         self.obj_dect_df = pd.DataFrame(index=np.arange(0), columns=df_columns)
-        print('Collecting data for {} files'.format(len(files)))
+        num_files = len(files)
+        print('Collecting data for {} files'.format(num_files))
+        counter = 0
         for a_file in files:
             # get r,c from file
             file_id = a_file.split('/')[-1]
@@ -164,6 +167,9 @@ class SatelliteTif():
             # append it
             self.obj_dect_df = self.obj_dect_df.append(df_sub,
                                                        ignore_index=True)
+            if counter % (num_files / 100) == 0:
+                print('{} percent done'.format(counter / num_files))
+            counter += 1
         # save it
         if save_name is not None:
             full_path = self.output_dir + '/' + save_name

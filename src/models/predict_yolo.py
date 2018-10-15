@@ -108,7 +108,7 @@ def main(config):
         files_2_pred = [pred_path]
     else:
         files_2_pred = glob.glob(pred_path + '*')
-    print('Predicting objects on files', files_2_pred)
+    print('Predicting objects on {} files'.format(len(files_2_pred)))
     # loop over all files
     for image_path in files_2_pred:
         # load image and predict bounding box
